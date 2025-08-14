@@ -6,14 +6,11 @@ import {
   useSelectedAddressId,
   useContacts,
   useSelectedContactId,
-  usePaymentMethods,
-  useSelectedPaymentId,
   useDeliveryOptions,
   useSelectedDeliveryTime,
   useDeliveryFee,
   type Address,
   type Contact,
-  type PaymentInfo,
   useCheckoutStore,
 } from "@/store/checkout";
 import { Button } from "@/components/ui/button";
@@ -38,8 +35,6 @@ const Cart: React.FC = () => {
   const selectedAddressId = useSelectedAddressId();
   const contacts = useContacts();
   const selectedContactId = useSelectedContactId();
-  const paymentMethods = usePaymentMethods();
-  const selectedPaymentId = useSelectedPaymentId();
   const deliveryOptions = useDeliveryOptions();
   const selectedDeliveryTime = useSelectedDeliveryTime();
   const deliveryFee = useDeliveryFee();
@@ -48,11 +43,11 @@ const Cart: React.FC = () => {
     addAddress,
     deleteAddress,
     selectAddress,
-    setDefaultAddress,
+    // setDefaultAddress,
     addContact,
     deleteContact,
     selectContact,
-    setDefaultContact,
+    // setDefaultContact,
     setSelectedTime,
   } = useCheckoutStore();
 
@@ -73,7 +68,6 @@ const Cart: React.FC = () => {
     email: "",
   });
 
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -123,10 +117,10 @@ const Cart: React.FC = () => {
     deleteAddress(id);
   };
 
-  const handleSetDefaultAddress = (id: string) => {
-    setDefaultAddress(id);
-    selectAddress(id);
-  };
+  // const _handleSetDefaultAddress = (id: string) => {
+  //   setDefaultAddress(id);
+  //     selectAddress(id);
+  //   };
 
   // Contact functions
   const handleAddContact = () => {
@@ -157,10 +151,10 @@ const Cart: React.FC = () => {
     deleteContact(id);
   };
 
-  const handleSetDefaultContact = (id: string) => {
-    setDefaultContact(id);
-    selectContact(id);
-  };
+  // const handleSetDefaultContact = (id: string) => {
+  //   setDefaultContact(id);
+  //   selectContact(id);
+  // };
 
   // Payment functions
   const handleCardNumberChange = (value: string) => {

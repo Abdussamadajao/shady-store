@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { User, Mail, Phone, MapPin, Edit, Save, X } from "lucide-react";
+import { useState } from "react";
+import { User, MapPin, Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ const Profile = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({ ...prev, [field]: value }));
+    setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -42,16 +42,24 @@ const Profile = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your personal information and preferences</p>
+          <p className="text-gray-600 mt-2">
+            Manage your personal information and preferences
+          </p>
         </div>
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="bg-secondary hover:bg-secondary-100">
+          <Button
+            onClick={() => setIsEditing(true)}
+            className="bg-secondary hover:bg-secondary-100"
+          >
             <Edit className="h-4 w-4 mr-2" />
             Edit Profile
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} className="bg-secondary hover:bg-secondary-100">
+            <Button
+              onClick={handleSave}
+              className="bg-secondary hover:bg-secondary-100"
+            >
               <Save className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
@@ -81,10 +89,14 @@ const Profile = () => {
                   <Input
                     id="firstName"
                     value={editForm.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                   />
                 ) : (
-                  <p className="text-gray-900 font-medium">{profile.firstName}</p>
+                  <p className="text-gray-900 font-medium">
+                    {profile.firstName}
+                  </p>
                 )}
               </div>
               <div>
@@ -93,10 +105,14 @@ const Profile = () => {
                   <Input
                     id="lastName"
                     value={editForm.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                   />
                 ) : (
-                  <p className="text-gray-900 font-medium">{profile.lastName}</p>
+                  <p className="text-gray-900 font-medium">
+                    {profile.lastName}
+                  </p>
                 )}
               </div>
             </div>
@@ -181,7 +197,9 @@ const Profile = () => {
                   <Input
                     id="zipCode"
                     value={editForm.zipCode}
-                    onChange={(e) => handleInputChange("zipCode", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("zipCode", e.target.value)
+                    }
                   />
                 ) : (
                   <p className="text-gray-900 font-medium">{profile.zipCode}</p>

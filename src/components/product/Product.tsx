@@ -15,7 +15,6 @@ const Product: React.FC = () => {
           name={product.name}
           price={product.price}
           count={product.count}
-          category={product.category}
         />
       ))}
     </div>

@@ -117,7 +117,7 @@ export const useCartStore = create<CartStore>()(
         const { cartTotal, cartItemCount } = calculateTotals(cart);
         set({ cartTotal, cartItemCount });
         // Force a re-save to localStorage
-        const store = get();
+
         localStorage.setItem(
           "cart-storage",
           JSON.stringify({

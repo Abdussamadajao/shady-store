@@ -1,13 +1,5 @@
-import React, { useState } from "react";
-import {
-  Tag,
-  Clock,
-  Star,
-  ShoppingCart,
-  Heart,
-  Share2,
-  Filter,
-} from "lucide-react";
+import { useState } from "react";
+import { Tag, Clock, ShoppingCart, Heart, Share2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,14 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatNGN } from "@/utils/currency";
-import { useOffersStore, useOffersActions } from "@/store/offers";
+import { useOffersStore } from "@/store/offers";
 
 const Offers = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
-  const { offers, activeOffers, getOffersForCategory } = useOffersStore();
+  const { activeOffers } = useOffersStore();
 
   const categories = [
     { value: "all", label: "All Offers" },

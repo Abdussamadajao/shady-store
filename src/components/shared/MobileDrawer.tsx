@@ -1,11 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Search,
   User,
   Filter,
-  Menu,
-  X,
   Home,
   Gift,
   HelpCircle,

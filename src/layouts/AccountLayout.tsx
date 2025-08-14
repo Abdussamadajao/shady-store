@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { Settings, Package, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";

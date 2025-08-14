@@ -1,5 +1,13 @@
-import React, { useState } from "react";
-import { Search, HelpCircle, MessageCircle, Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import {
+  Search,
+  HelpCircle,
+  MessageCircle,
+  Phone,
+  Mail,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,38 +21,44 @@ const Help = () => {
     {
       id: 1,
       question: "How do I place an order?",
-      answer: "Browse products, add to cart, and proceed to checkout with delivery and payment details.",
+      answer:
+        "Browse products, add to cart, and proceed to checkout with delivery and payment details.",
       category: "Ordering",
     },
     {
       id: 2,
       question: "What payment methods do you accept?",
-      answer: "We accept credit/debit cards, bank transfers, mobile money, and cash on delivery.",
+      answer:
+        "We accept credit/debit cards, bank transfers, mobile money, and cash on delivery.",
       category: "Payment",
     },
     {
       id: 3,
       question: "How long does delivery take?",
-      answer: "Standard delivery takes 2-4 hours, express delivery takes 90 minutes.",
+      answer:
+        "Standard delivery takes 2-4 hours, express delivery takes 90 minutes.",
       category: "Delivery",
     },
     {
       id: 4,
       question: "Can I cancel my order?",
-      answer: "You can cancel within 1 hour of placing the order. Contact customer service for assistance.",
+      answer:
+        "You can cancel within 1 hour of placing the order. Contact customer service for assistance.",
       category: "Ordering",
     },
     {
       id: 5,
       question: "What if I'm not satisfied?",
-      answer: "Contact us within 24 hours of delivery for resolution or refund as per our return policy.",
+      answer:
+        "Contact us within 24 hours of delivery for resolution or refund as per our return policy.",
       category: "Returns",
     },
   ];
 
-  const filteredFAQs = faqs.filter((faq) =>
-    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFAQs = faqs.filter(
+    (faq) =>
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const toggleFAQ = (id: number) => {
@@ -56,7 +70,9 @@ const Help = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Help & Support</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Help & Support
+          </h1>
           <p className="text-lg text-gray-600">
             Find answers to common questions and get the help you need
           </p>
@@ -80,22 +96,34 @@ const Help = () => {
           <Card className="text-center p-6">
             <MessageCircle className="h-8 w-8 text-blue-600 mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Live Chat</h3>
-            <p className="text-sm text-gray-600 mb-3">Get instant help from our support team</p>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Start Chat</Button>
+            <p className="text-sm text-gray-600 mb-3">
+              Get instant help from our support team
+            </p>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              Start Chat
+            </Button>
           </Card>
-          
+
           <Card className="text-center p-6">
             <Phone className="h-8 w-8 text-green-600 mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Call Us</h3>
-            <p className="text-sm text-gray-600 mb-3">Speak directly with customer service</p>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">+234 801 234 5678</Button>
+            <p className="text-sm text-gray-600 mb-3">
+              Speak directly with customer service
+            </p>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700">
+              +234 801 234 5678
+            </Button>
           </Card>
-          
+
           <Card className="text-center p-6">
             <Mail className="h-8 w-8 text-purple-600 mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Email Support</h3>
-            <p className="text-sm text-gray-600 mb-3">Send us a detailed message</p>
-            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">Send Email</Button>
+            <p className="text-sm text-gray-600 mb-3">
+              Send us a detailed message
+            </p>
+            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+              Send Email
+            </Button>
           </Card>
         </div>
 
@@ -129,18 +157,24 @@ const Help = () => {
                     <div className="px-4 pb-4">
                       <p className="text-gray-700">{faq.answer}</p>
                       <div className="flex gap-2 mt-3">
-                        <Button variant="outline" size="sm">Was this helpful?</Button>
-                        <Button variant="outline" size="sm">Contact Support</Button>
+                        <Button variant="outline" size="sm">
+                          Was this helpful?
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Contact Support
+                        </Button>
                       </div>
                     </div>
                   )}
                 </div>
               ))}
             </div>
-            
+
             {filteredFAQs.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-600">No results found. Try different search terms.</p>
+                <p className="text-gray-600">
+                  No results found. Try different search terms.
+                </p>
               </div>
             )}
           </CardContent>
@@ -151,7 +185,10 @@ const Help = () => {
           <CardContent className="p-6 text-center">
             <h3 className="text-xl font-bold mb-2">Still Need Help?</h3>
             <p className="mb-4">Our support team is here to help you 24/7</p>
-            <Button variant="outline" className="bg-white text-secondary hover:bg-gray-100">
+            <Button
+              variant="outline"
+              className="bg-white text-secondary hover:bg-gray-100"
+            >
               Contact Support Team
             </Button>
           </CardContent>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShoppingCart, X, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import {
   useCartTotal,
   useCartItemCount,

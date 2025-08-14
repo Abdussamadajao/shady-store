@@ -24,13 +24,11 @@ interface OffersState {
 }
 
 interface OffersActions {
-  addOffer: (offer: Omit<ProductOffer, "id">) => void;
-  updateOffer: (id: string, updates: Partial<ProductOffer>) => void;
-  deleteOffer: (id: string) => void;
-  toggleOfferStatus: (id: string) => void;
   getOffersForProduct: (productId: string) => ProductOffer[];
-  getOffersForCategory: (category: string) => ProductOffer[];
-  calculateDiscountedPrice: (originalPrice: number, productId: string) => number;
+  calculateDiscountedPrice: (
+    originalPrice: number,
+    productId: string
+  ) => number;
   getActiveOffers: () => ProductOffer[];
 }
 
@@ -103,71 +101,19 @@ const sampleOffers: ProductOffer[] = [
 
 export const useOffersStore = create<OffersStore>()(
   persist(
-    (set, get) => ({
+    (_, get) => ({
       offers: sampleOffers,
-      activeOffers: sampleOffers.filter(offer => offer.isActive),
-
-      addOffer: (offerData) => {
-        const newOffer: ProductOffer = {
-          ...offerData,
-          id: `offer-${Date.now()}`,
-        };
-        set((state) => ({
-          offers: [...state.offers, newOffer],
-          activeOffers: [...state.activeOffers, newOffer].filter(offer => offer.isActive),
-        }));
-      },
-
-      updateOffer: (id, updates) => {
-        set((state) => {
-          const updatedOffers = state.offers.map((offer) =>
-            offer.id === id ? { ...offer, ...updates } : offer
-          );
-          return {
-            offers: updatedOffers,
-            activeOffers: updatedOffers.filter(offer => offer.isActive),
-          };
-        });
-      },
-
-      deleteOffer: (id) => {
-        set((state) => ({
-          offers: state.offers.filter((offer) => offer.id !== id),
-          activeOffers: state.activeOffers.filter((offer) => offer.id !== id),
-        }));
-      },
-
-      toggleOfferStatus: (id) => {
-        set((state) => {
-          const updatedOffers = state.offers.map((offer) =>
-            offer.id === id ? { ...offer, isActive: !offer.isActive } : offer
-          );
-          return {
-            offers: updatedOffers,
-            activeOffers: updatedOffers.filter(offer => offer.isActive),
-          };
-        });
-      },
+      activeOffers: sampleOffers.filter((offer) => offer.isActive),
 
       getOffersForProduct: (productId) => {
         const { offers } = get();
         const now = new Date();
         return offers.filter((offer) => {
           const isActive = offer.isActive;
-          const isInDateRange = new Date(offer.startDate) <= now && new Date(offer.endDate) >= now;
+          const isInDateRange =
+            new Date(offer.startDate) <= now && new Date(offer.endDate) >= now;
           const appliesToProduct = offer.productIds.includes(productId);
           return isActive && isInDateRange && appliesToProduct;
-        });
-      },
-
-      getOffersForCategory: (category) => {
-        const { offers } = get();
-        const now = new Date();
-        return offers.filter((offer) => {
-          const isActive = offer.isActive;
-          const isInDateRange = new Date(offer.startDate) <= now && new Date(offer.endDate) >= now;
-          const matchesCategory = offer.category === category;
-          return isActive && isInDateRange && matchesCategory;
         });
       },
 
@@ -198,9 +144,13 @@ export const useOffersStore = create<OffersStore>()(
         let discountedPrice = originalPrice;
 
         if (bestOffer.discountType === "percentage") {
-          discountedPrice = originalPrice - (originalPrice * bestOffer.discountValue) / 100;
+          discountedPrice =
+            originalPrice - (originalPrice * bestOffer.discountValue) / 100;
         } else if (bestOffer.discountType === "fixed") {
-          discountedPrice = Math.max(0, originalPrice - bestOffer.discountValue);
+          discountedPrice = Math.max(
+            0,
+            originalPrice - bestOffer.discountValue
+          );
         }
 
         return Math.round(discountedPrice);
@@ -211,7 +161,8 @@ export const useOffersStore = create<OffersStore>()(
         const now = new Date();
         return offers.filter((offer) => {
           const isActive = offer.isActive;
-          const isInDateRange = new Date(offer.startDate) <= now && new Date(offer.endDate) >= now;
+          const isInDateRange =
+            new Date(offer.startDate) <= now && new Date(offer.endDate) >= now;
           return isActive && isInDateRange;
         });
       },
@@ -225,14 +176,5 @@ export const useOffersStore = create<OffersStore>()(
 
 // Selector hooks
 export const useOffers = () => useOffersStore((state) => state.offers);
-export const useActiveOffers = () => useOffersStore((state) => state.activeOffers);
-export const useOffersActions = () => useOffersStore((state) => ({
-  addOffer: state.addOffer,
-  updateOffer: state.updateOffer,
-  deleteOffer: state.deleteOffer,
-  toggleOfferStatus: state.toggleOfferStatus,
-  getOffersForProduct: state.getOffersForProduct,
-  getOffersForCategory: state.getOffersForCategory,
-  calculateDiscountedPrice: state.calculateDiscountedPrice,
-  getActiveOffers: state.getActiveOffers,
-}));
+export const useActiveOffers = () =>
+  useOffersStore((state) => state.activeOffers);

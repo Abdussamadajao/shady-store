@@ -19,7 +19,6 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({
   images,
   autoplay = true,
   loop = true,
-  slidesPerView = 1,
   className,
   style,
 }) => {

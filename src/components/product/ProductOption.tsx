@@ -12,7 +12,6 @@ interface ProductOptionProps {
   price: string;
   name: string;
   count: string;
-  category: string;
 }
 
 const ProductOption: React.FC<ProductOptionProps> = ({

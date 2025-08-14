@@ -486,6 +486,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       resetDeliveryPreferences: () => {
         set((state) => ({
+          ...state,
           deliveryPreferences: {
             selectedTimeId: "express",
             deliveryInstructions: "",

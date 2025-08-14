@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Settings, Bell, Shield, Globe, Palette, Save, X } from "lucide-react";
+import { useState } from "react";
+import { Settings, Bell, Shield, Palette, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {

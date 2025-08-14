@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, User, Filter, Menu, X } from "lucide-react";
+import { User, Filter, Menu } from "lucide-react";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { SearchBar, FilterDrawer, MobileDrawer } from "../shared";
 import { useProductStore } from "@/store/products";
 import {
