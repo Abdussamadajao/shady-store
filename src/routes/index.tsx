@@ -52,14 +52,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      {
-        path: "/cart",
-        element: <Cart />,
-      },
-      {
-        path: "/checkout",
-        element: <Checkout />,
-      },
+
       {
         path: "/offers",
         element: <Offers />,
@@ -71,6 +64,14 @@ export const routes: RouteObject[] = [
       {
         element: <ProtectedRoute />,
         children: [
+          {
+            path: "/cart",
+            element: <Cart />,
+          },
+          {
+            path: "/checkout",
+            element: <Checkout />,
+          },
           {
             path: PATH.account.root,
             element: <AccountLayout />,
