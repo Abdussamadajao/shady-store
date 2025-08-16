@@ -3,12 +3,15 @@ import { Product } from "@/components/product";
 import { ImageSlider } from "@/components/shared";
 import heroOne from "@/assets/images/hero-1.jpg";
 import heroTwo from "@/assets/images/hero-2.jpg";
-import React from "react";
+import React, { useState } from "react";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { Button } from "@/components/ui/button";
+import { Filter as FilterIcon, Grid, List } from "lucide-react";
 
 const Home: React.FC = () => {
   // Auto-scroll to top when navigating to home
   useScrollToTop();
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Dummy images for the slider
   const images = [
@@ -23,31 +26,136 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full  px-4 pb-20  py-4 md:px-6 md:py-10 lg:px-8 lg:py-6">
-      {/* Mobile Layout */}
-      <div className="block lg:hidden">
-        <div className="flex flex-col gap-4">
-          <ImageSlider images={images} />
-          <Product />
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content Area */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-20">
+        {/* Mobile & Tablet Layout */}
+        <div className="block xl:hidden">
+          {/* Mobile Header with Filter Toggle */}
+          <div className="sticky top-16 z-10 bg-white border-b border-gray-200 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+            <div className="flex items-center justify-between py-3">
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Products
+                </h1>
+                <span className="text-sm text-gray-500">•</span>
+                <span className="text-sm text-gray-500">All Categories</span>
+              </div>
 
-      {/* Desktop Layout - Improved for 1024px */}
-      <div className="hidden lg:grid lg:grid-cols-12 lg:gap-4 xl:gap-6 ">
-        {/* Filter Sidebar - Adjusted width for 1024px */}
-        <div className="col-span-2 xl:col-span-2 lg:sticky lg:top-[100px] lg:h-[calc(100vh-120px)] lg:overflow-y-auto">
-          <Filter />
-        </div>
-
-        {/* Main Content - Adjusted for better 1024px layout */}
-        <main className="col-span-9 xl:col-span-10 lg:overflow-y-auto lg:flex lg:flex-col lg:gap-4 xl:gap-6">
-          <div className="lg:mb-4">
-            <ImageSlider images={images} />
+              {/* Mobile Filter Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-2 bg-white border-gray-300 hover:bg-gray-50"
+              >
+                <FilterIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Filter</span>
+              </Button>
+            </div>
           </div>
-          <div className="lg:flex-1 ">
+
+          {/* Mobile Products */}
+          <div className="py-4">
             <Product />
           </div>
-        </main>
+        </div>
+
+        {/* Desktop Layout - Optimized for different screen sizes */}
+        <div className="hidden xl:block">
+          <div className="grid grid-cols-12 gap-6 lg:gap-8">
+            {/* Filter Sidebar - Left side */}
+            <div className="col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
+              <div className="sticky top-[140px] h-[calc(100vh-120px)] ">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Categories
+                  </h2>
+                  <Filter />
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content Area - Center */}
+            <main className="col-span-9 lg:col-span-9 xl:col-span-10 2xl:col-span-9 overflow-y-auto">
+              {/* Image Slider - Above products */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <ImageSlider images={images} className="w-full" />
+              </div>
+
+              {/* Desktop Header with View Toggle */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <h1 className="text-xl font-semibold text-gray-900">
+                      Products
+                    </h1>
+                    <span className="text-sm text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">
+                      All Categories
+                    </span>
+                  </div>
+
+                  {/* Enhanced View Mode Toggle */}
+                  <div className="flex items-center space-x-4">
+                    {/* View Options */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600 font-medium">
+                        View:
+                      </span>
+                      <div className="flex bg-gray-100 rounded-lg p-1">
+                        <Button
+                          variant={viewMode === "grid" ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("grid")}
+                          className={`h-9 px-4 transition-all duration-200 ${
+                            viewMode === "grid"
+                              ? "bg-secondary hover:bg-secondary-100 shadow-sm text-white"
+                              : "hover:bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          <Grid className="w-4 h-4 mr-2" />
+                          Grid
+                        </Button>
+                        <Button
+                          variant={viewMode === "list" ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("list")}
+                          className={`h-9 px-4 transition-all duration-200 ${
+                            viewMode === "list"
+                              ? "bg-secondary hover:bg-secondary-100 shadow-sm text-white"
+                              : "hover:bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          <List className="w-4 h-4 mr-2" />
+                          List
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Sort Options */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600 font-medium">
+                        Sort:
+                      </span>
+                      <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop Products */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <Product viewMode={viewMode} />
+              </div>
+            </main>
+          </div>
+        </div>
       </div>
     </div>
   );

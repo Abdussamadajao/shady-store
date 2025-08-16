@@ -1,11 +1,5 @@
 import React, { useState } from "react";
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
-import {
-  useCartTotal,
-  useCartItemCount,
-  useCartItems,
-  useCartStore,
-} from "@/store/cart";
 import { Button } from "../ui/button";
 import { formatNGN } from "@/utils/currency";
 import {
@@ -18,11 +12,18 @@ import {
 } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "@/routes/paths";
+import {
+  useCartItems,
+  useCartTotal,
+  useCartPendingSync,
+  useCartStore,
+} from "@/store/cart";
 
 // Subtotal Component
 const Subtotal: React.FC = () => {
+  const cartItems = useCartItems();
   const cartTotal = useCartTotal();
-  const cartItemCount = useCartItemCount();
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="flex flex-col gap-2">
@@ -45,9 +46,10 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   onClose,
 }) => {
   const cartItems = useCartItems();
-  const { removeFromCart, updateCartItemQuantity } = useCartStore();
   const cartTotal = useCartTotal();
+
   const navigate = useNavigate();
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-[90vw] max-w-md">
@@ -83,48 +85,22 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   {/* Item Details */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-800 truncate">
-                      {item.name}
+                      {item.product.name}
                     </h3>
-                    <p className="text-sm text-gray-500">{item.category}</p>
+                    <p className="text-sm text-gray-500">
+                      {/* {item.product. || "Uncategorized"} */}
+                    </p>
                     <p className="text-lg font-semibold text-secondary-100">
-                      {formatNGN(
-                        typeof item.price === "string"
-                          ? parseFloat(item.price)
-                          : item.price
-                      )}
+                      {formatNGN(item.product.price)}
                     </p>
                   </div>
 
                   {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity - 1)
-                      }
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                      <Minus className="h-4 w-4 text-gray-600" />
-                    </button>
                     <span className="w-8 text-center font-medium">
                       {item.quantity}
                     </span>
-                    <button
-                      onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity + 1)
-                      }
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                      <Plus className="h-4 w-4 text-gray-600" />
-                    </button>
                   </div>
-
-                  {/* Remove Button */}
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>
@@ -162,7 +138,6 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   onClose,
 }) => {
   const cartItems = useCartItems();
-  const { removeFromCart, updateCartItemQuantity } = useCartStore();
   const cartTotal = useCartTotal();
 
   return (
@@ -205,48 +180,20 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   {/* Item Details */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-800 truncate text-sm">
-                      {item.name}
+                      {item.product.name}
                     </h3>
-                    <p className="text-xs text-gray-500">{item.category}</p>
+
                     <p className="text-base font-semibold text-secondary-100">
-                      {formatNGN(
-                        typeof item.price === "string"
-                          ? parseFloat(item.price)
-                          : item.price
-                      )}
+                      {formatNGN(item.product.price)}
                     </p>
                   </div>
 
-                  {/* Quantity Controls */}
+                  {/* Quantity */}
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity - 1)
-                      }
-                      className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                    >
-                      <Minus className="h-3 w-3 text-gray-600" />
-                    </button>
                     <span className="w-8 text-center font-medium text-sm">
                       {item.quantity}
                     </span>
-                    <button
-                      onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity + 1)
-                      }
-                      className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="h-3 w-3 text-gray-600" />
-                    </button>
                   </div>
-
-                  {/* Remove Button */}
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>
@@ -280,6 +227,13 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 const Cart = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+
+  // Extract cart values from the cart store
+  const cartItems = useCartItems();
+  const cartTotal = useCartTotal();
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const pendingSync = useCartPendingSync();
+  const { syncToDatabase } = useCartStore();
 
   const handleCartClick = () => {
     // Check if mobile or desktop
@@ -318,15 +272,13 @@ const Cart = () => {
           {/* Left Side - Cart Icon and Item Count */}
           <div className="flex items-center gap-2 text-white">
             <ShoppingCart className="h-5 w-5" />
-            <span className="text-sm font-medium">
-              {useCartItemCount()} items
-            </span>
+            <span className="text-sm font-medium">{cartItemCount} items</span>
           </div>
 
           {/* Right Side - Total Price */}
           <div className="bg-white rounded-full flex items-center justify-center px-3 py-1 w-16 h-10">
             <span className="text-sm font-semibold text-secondary-100">
-              {formatNGN(useCartTotal())}
+              {formatNGN(cartTotal)}
             </span>
           </div>
         </div>
@@ -337,6 +289,22 @@ const Cart = () => {
 
       {/* Mobile Cart */}
       <MobileCart isOpen={isMobileCartOpen} onClose={closeMobileCart} />
+
+      {/* Sync Status Indicator (for debugging) */}
+      {pendingSync && (
+        <div className="fixed top-4 right-4 bg-orange-500 text-white px-3 py-2 rounded-lg shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-sm">Syncing cart...</span>
+            <button
+              onClick={syncToDatabase}
+              className="text-xs bg-white text-orange-500 px-2 py-1 rounded hover:bg-gray-100"
+            >
+              Sync Now
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

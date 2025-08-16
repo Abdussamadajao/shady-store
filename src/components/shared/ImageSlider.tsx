@@ -77,7 +77,7 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden w-full h-full sm:h-[300px] md:h-[350px] lg:h-[400px] rounded-lg",
+        "relative overflow-hidden w-full rounded-xl shadow-lg bg-gray-100",
         className
       )}
       style={style}
@@ -87,33 +87,47 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({
           {images.map((image, index) => (
             <div
               key={index}
-              className="embla__slide flex-[0_0_100%] min-w-full"
+              className="embla__slide flex-[0_0_100%] min-w-full relative"
             >
               <img
                 src={image.src}
                 alt={image.alt}
-                className=" w-full h-auto object-contain"
+                className="w-full h-[400px] object-cover"
               />
             </div>
           ))}
         </div>
       </div>
 
-      <button
-        className="Nav prev absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white rounded-full p-1.5 sm:p-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-montserrat"
-        onClick={scrollPrev}
-        disabled={!prevBtnEnabled}
-      >
-        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-      </button>
+      {/* Navigation Buttons - Responsive */}
+      <div className="absolute inset-0 flex items-center justify-between p-2 sm:p-4 pointer-events-none">
+        <button
+          onClick={scrollPrev}
+          disabled={!prevBtnEnabled}
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+        >
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        <button
+          onClick={scrollNext}
+          disabled={!nextBtnEnabled}
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+        >
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </div>
 
-      <button
-        className="Nav next absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white rounded-full p-1.5 sm:p-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-montserrat"
-        onClick={scrollNext}
-        disabled={!nextBtnEnabled}
-      >
-        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-      </button>
+      {/* Progress Indicators - Desktop */}
+      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+        <div className="flex space-x-2">
+          {images.map((_, index) => (
+            <div
+              key={index}
+              className="w-2 h-2 bg-white/80 rounded-full shadow-sm"
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

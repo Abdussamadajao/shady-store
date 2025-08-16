@@ -6,6 +6,9 @@ import { AuthLayout, ProtectedLayout } from "../layouts";
 // Auth Pages
 import Login from "../pages/auth/login";
 import SignUp from "../pages/auth/signup";
+import ForgotPassword from "../pages/auth/forgot-password";
+import ResetPassword from "../pages/auth/reset-password";
+import Verification from "../pages/auth/verification";
 
 // Public Pages
 import Home from "../pages/Home";
@@ -14,6 +17,7 @@ import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
 import Offers from "../pages/Offers";
 import Help from "../pages/Help";
+import CartDemo from "@/components/cart/CartDemo";
 
 // Protected Pages
 import NotFound from "../pages/NotFound";
@@ -25,6 +29,7 @@ import { Profile, Orders, Settings } from "../pages/Account";
 import { PATH } from "./paths";
 import CartLayout from "@/layouts/CartLayout";
 import AccountLayout from "@/layouts/AccountLayout";
+import ProductDemo from "@/pages/Product/ProductDemo";
 
 export const routes: RouteObject[] = [
   {
@@ -42,13 +47,17 @@ export const routes: RouteObject[] = [
             children: [
               {
                 index: true,
-                element: <ProductPage />,
+                element: <ProductDemo />,
               },
               {
                 path: PATH.products.single(":id"),
                 element: <ProductPage />,
               },
             ],
+          },
+          {
+            path: "/cart-demo",
+            element: <CartDemo />,
           },
         ],
       },
@@ -110,6 +119,18 @@ export const routes: RouteObject[] = [
       {
         path: "signup",
         element: <SignUp />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPassword />,
+      },
+      {
+        path: "verification",
+        element: <Verification />,
       },
     ],
   },
