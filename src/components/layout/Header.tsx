@@ -16,14 +16,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { SearchBar, FilterDrawer, MobileDrawer } from "../shared";
+import {
+  SearchBar,
+  FilterDrawer,
+  MobileDrawer,
+  ProductSuggestions,
+} from "../shared";
 import { useProductsStore } from "@/store/products";
 import { useAuthStore } from "@/store/auth";
-import { PATH_AUTH } from "@/routes/paths";
+import { PATH, PATH_AUTH } from "@/routes/paths";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import type { Product } from "@/hooks/useProducts";
 
 const Header: React.FC = () => {
-  const { searchQuery, setSearchQuery } = useProductsStore();
+  const { searchQuery, setSearchQuery, performSearch } = useProductsStore();
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { isAuthenticated, logout, user } = useAuthStore();
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
@@ -32,6 +40,30 @@ const Header: React.FC = () => {
 
   // Check if we're on the home route
   const isHomeRoute = location.pathname === "/";
+
+  // Function to generate different colors for avatar fallbacks
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "bg-gradient-to-r from-blue-500 to-blue-600",
+      "bg-gradient-to-r from-green-500 to-green-600",
+      "bg-gradient-to-r from-purple-500 to-purple-600",
+      "bg-gradient-to-r from-pink-500 to-pink-600",
+      "bg-gradient-to-r from-indigo-500 to-indigo-600",
+      "bg-gradient-to-r from-red-500 to-red-600",
+      "bg-gradient-to-r from-yellow-500 to-yellow-600",
+      "bg-gradient-to-r from-teal-500 to-teal-600",
+      "bg-gradient-to-r from-orange-500 to-orange-600",
+      "bg-gradient-to-r from-cyan-500 to-cyan-600",
+    ];
+
+    // Generate a consistent color based on the name
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
 
   const openAuthPage = () => {
     navigate(PATH_AUTH.login);
@@ -42,14 +74,43 @@ const Header: React.FC = () => {
     navigate("/");
   };
 
-  const handleSearch = () => {
+  const handleSearch = (query: string) => {
+    performSearch(query);
+    setShowSuggestions(false);
+  };
+
+  const handleInputChange = (value: string) => {
+    setLocalSearchQuery(value);
+    setShowSuggestions(value.trim().length > 0);
+  };
+
+  const handleClear = () => {
+    setLocalSearchQuery("");
     setSearchQuery("");
+    setShowSuggestions(false);
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setLocalSearchQuery(product.name);
+    performSearch(product.name);
+    setShowSuggestions(false);
+  };
+
+  const handleInputFocus = () => {
+    if (localSearchQuery.trim().length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow clicking on them
+    setTimeout(() => setShowSuggestions(false), 200);
   };
 
   return (
     <>
       <div className="sticky top-0 z-20 bg-white border-b shadow">
-        <div className="px-4 md:px-[60px] py-4">
+        <div className="px-4 lg:px-9 xl:px-[60px] py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link
@@ -70,13 +131,23 @@ const Header: React.FC = () => {
 
             {/* Search Bar - Only show on home page */}
             {isHomeRoute && (
-              <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+              <div className="hidden lg:flex flex-1 max-w-[700px] mx-8 relative">
                 <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onSearch={handleSearch}
+                  value={localSearchQuery}
+                  onChange={handleInputChange}
+                  onClear={handleClear}
+                  onSearch={(query) => handleSearch(query)}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                   placeholder="Search your products from here"
-                  className="flex-grow w-full ml-4 bg-gray-100 border-none"
+                  className="flex-grow w-full ml-4 border-none"
+                />
+                <ProductSuggestions
+                  searchQuery={localSearchQuery}
+                  isVisible={showSuggestions}
+                  onProductSelect={handleProductSelect}
+                  onClose={() => setShowSuggestions(false)}
+                  className="w-full"
                 />
               </div>
             )}
@@ -94,7 +165,11 @@ const Header: React.FC = () => {
                     >
                       <Avatar>
                         <AvatarImage src={user?.image} />
-                        <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white">
+                        <AvatarFallback
+                          className={`${getAvatarColor(
+                            user?.name || user?.firstName || "User"
+                          )} text-white`}
+                        >
                           {user?.firstName?.charAt(0) ||
                             user?.name?.charAt(0) ||
                             "A"}
@@ -111,10 +186,10 @@ const Header: React.FC = () => {
                       <ChevronDown className="h-4 w-4 text-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-full">
                     <DropdownMenuItem asChild>
                       <Link
-                        to="/account"
+                        to={PATH.account.profile}
                         className="flex items-center cursor-pointer"
                       >
                         <Settings className="w-4 h-4 mr-3" />

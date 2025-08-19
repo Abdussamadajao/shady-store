@@ -17,7 +17,6 @@ import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
 import Offers from "../pages/Offers";
 import Help from "../pages/Help";
-import CartDemo from "@/components/cart/CartDemo";
 
 // Protected Pages
 import NotFound from "../pages/NotFound";
@@ -26,53 +25,80 @@ import NotFound from "../pages/NotFound";
 import { Profile, Orders, Settings } from "../pages/Account";
 
 // Layouts
-import { PATH } from "./paths";
+import { PATH, PATH_AUTH } from "./paths";
 import CartLayout from "@/layouts/CartLayout";
 import AccountLayout from "@/layouts/AccountLayout";
 import ProductDemo from "@/pages/Product/ProductDemo";
+import AuthRoute from "@/guards/AuthRoute";
 
 export const routes: RouteObject[] = [
   {
-    element: <ProtectedLayout />,
+    element: <AuthRoute />,
     children: [
       {
-        element: <CartLayout />,
+        path: PATH_AUTH.root,
+        element: <AuthLayout />,
         children: [
           {
-            path: PATH.root,
-            element: <Home />,
+            path: PATH_AUTH.login,
+            element: <Login />,
           },
           {
-            path: PATH.products.root,
+            path: PATH_AUTH.signup,
+            element: <SignUp />,
+          },
+          {
+            path: PATH_AUTH.forgotPassword,
+            element: <ForgotPassword />,
+          },
+          {
+            path: PATH_AUTH.resetPassword,
+            element: <ResetPassword />,
+          },
+          {
+            path: PATH_AUTH.verification,
+            element: <Verification />,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <ProtectedLayout />,
+        children: [
+          {
+            element: <CartLayout />,
             children: [
               {
-                index: true,
-                element: <ProductDemo />,
+                path: PATH.root,
+                element: <Home />,
               },
               {
-                path: PATH.products.single(":id"),
-                element: <ProductPage />,
+                path: PATH.products.root,
+                children: [
+                  {
+                    index: true,
+                    element: <ProductDemo />,
+                  },
+                  {
+                    path: PATH.products.single(":id"),
+                    element: <ProductPage />,
+                  },
+                ],
               },
             ],
           },
           {
-            path: "/cart-demo",
-            element: <CartDemo />,
+            path: "/offers",
+            element: <Offers />,
           },
-        ],
-      },
-
-      {
-        path: "/offers",
-        element: <Offers />,
-      },
-      {
-        path: "/help",
-        element: <Help />,
-      },
-      {
-        element: <ProtectedRoute />,
-        children: [
+          {
+            path: "/help",
+            element: <Help />,
+          },
           {
             path: "/cart",
             element: <Cart />,
@@ -107,34 +133,6 @@ export const routes: RouteObject[] = [
       },
     ],
   },
-
-  {
-    path: "/auth",
-    element: <AuthLayout />,
-    children: [
-      {
-        path: "login",
-        element: <Login />,
-      },
-      {
-        path: "signup",
-        element: <SignUp />,
-      },
-      {
-        path: "forgot-password",
-        element: <ForgotPassword />,
-      },
-      {
-        path: "reset-password",
-        element: <ResetPassword />,
-      },
-      {
-        path: "verification",
-        element: <Verification />,
-      },
-    ],
-  },
-
   {
     path: "*",
     element: <NotFound />,

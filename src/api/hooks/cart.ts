@@ -1,199 +1,141 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  addToCart,
-  clearCart,
-  fetchCart,
-  fetchCartSummary,
-  removeFromCart,
-  updateCartItem,
-} from "../service/cart";
-import type { CartItem, UpdateCartItemRequest } from "@/types";
-import React from "react";
-import { useCartStore } from "@/store/cart";
+import useCartStore from "@/store/cart";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { cartApi } from "../service";
+import type { AddToCartRequest, CartItem } from "@/types";
+import { useEffect } from "react";
 
-export const useCart = () => {
-  return useQuery({
-    queryKey: ["cart"],
-    queryFn: fetchCart,
-    staleTime: 1 * 60 * 1000, // 1 minute
-    gcTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-export const useCartSummary = () => {
-  return useQuery({
-    queryKey: ["cart", "summary"],
-    queryFn: fetchCartSummary,
-    staleTime: 1 * 60 * 1000, // 1 minute
-    gcTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-export const useAddToCart = () => {
+export const useCartMutations = () => {
   const queryClient = useQueryClient();
+  const { addToCart, updateQuantity, removeFromCart, clearCart, syncCart } =
+    useCartStore();
 
-  return useMutation({
-    mutationFn: addToCart,
-    onMutate: async (data) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["cart"] });
-
-      // Snapshot the previous value
-      const previousCart = queryClient.getQueryData(["cart"]);
-
-      return { previousCart };
-    },
-    onSuccess: () => {
-      // Invalidate and refetch cart data
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", "summary"] });
-    },
-    onError: (error, variables, context) => {
+  const addMutation = useMutation({
+    mutationFn: cartApi.addItem,
+    onError: (error) => {
       console.error("Failed to add item to cart:", error);
-
-      // Optionally revert optimistic updates on error
-      // This would require storing the previous state
-    },
-    onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onSuccess: (data) => {
+      console.log("Item added successfully");
+      queryClient.setQueryData(["cart"], (oldData: any) => {
+        console.log(oldData, "oldData");
+        const updatedCart = oldData ? [...oldData, data] : [data];
+        syncCart(updatedCart);
+        return updatedCart;
+      });
     },
   });
-};
 
-export const useUpdateCartItem = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateCartItemRequest }) =>
-      updateCartItem(id, data),
-    onSuccess: () => {
-      // Invalidate and refetch cart data
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", "summary"] });
-    },
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      cartApi.updateItem(id, data),
     onError: (error) => {
       console.error("Failed to update cart item:", error);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onSuccess: (data) => {
+      console.log("Item updated successfully");
+      queryClient.setQueryData(["cart"], data);
+      queryClient.setQueryData(["cart"], (oldData: any) => {
+        // Ensure oldData is an array
+        const currentItems = Array.isArray(oldData)
+          ? oldData
+          : oldData?.items
+          ? oldData.items
+          : [];
+
+        const updatedCart = currentItems.map((item: CartItem) =>
+          item.id === data.id ? data : item
+        );
+        syncCart(updatedCart);
+        return updatedCart;
+      });
     },
   });
-};
-
-export const useRemoveFromCart = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: removeFromCart,
-    onSuccess: () => {
-      // Invalidate and refetch cart data
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", "summary"] });
-    },
+  const removeMutation = useMutation({
+    mutationFn: cartApi.removeItem,
     onError: (error) => {
-      console.error("Failed to remove item from cart:", error);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
+      console.error("Failed to remove cart item:", error);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onSuccess: (data) => {
+      console.log("Item removed successfully");
+      queryClient.setQueryData(["cart"], data);
     },
   });
-};
 
-export const useClearCart = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: clearCart,
-    onSuccess: () => {
-      // Invalidate and refetch cart data
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", "summary"] });
-    },
+  const clearMutation = useMutation({
+    mutationFn: cartApi.clearCart,
     onError: (error) => {
       console.error("Failed to clear cart:", error);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
+    onSuccess: () => {
+      console.log("Cart cleared successfully");
+      queryClient.setQueryData(["cart"], { items: [] });
+      syncCart([]);
+    },
   });
-};
+  const optimisticAddToCart = async (item: AddToCartRequest) => {
+    const cartItem = {
+      productId: item.productId,
+      userId: item.userId, // Will be set by the store
+      quantity: item.quantity,
+      product: item.product,
+    };
+    addToCart(cartItem as any);
+    await addMutation.mutateAsync(cartItem);
+  };
 
-// Enhanced hook that combines local store with API sync
-export const useCartManager = () => {
-  const { data: apiCart, isLoading: apiLoading, error: apiError } = useCart();
-  const {
-    items: localItems,
-    total: localTotal,
-    itemCount: localItemCount,
-    pendingSync,
-    lastSynced,
-    // syncWithAPI,
-    setLoading,
-    setError,
-  } = useCartStore();
+  const optimisticUpdateQuantity = async (id: string, quantity: number) => {
+    updateQuantity(id, quantity);
+    await updateMutation.mutateAsync({ id, data: { quantity } });
+  };
 
-  // Sync API data with local store when it changes
-  // React.useEffect(() => {
-  //   if (apiCart && apiCart.items) {
-  //     syncWithAPI(apiCart.items);
-  //   }
-  // }, [apiCart, syncWithAPI]);
+  const optimisticRemoveFromCart = async (id: string) => {
+    removeFromCart(id);
+    await removeMutation.mutateAsync(id);
+  };
 
-  // Sync loading and error states
-  React.useEffect(() => {
-    setLoading(apiLoading);
-  }, [apiLoading, setLoading]);
-
-  React.useEffect(() => {
-    setError(apiError?.message || null);
-  }, [apiError, setError]);
+  const optimisticClearCart = async () => {
+    clearCart();
+    await clearMutation.mutateAsync();
+  };
 
   return {
-    // Use local store for immediate updates
-    items: localItems,
-    total: localTotal,
-    itemCount: localItemCount,
-    isLoading: apiLoading,
-    error: apiError?.message || null,
-    pendingSync,
-    lastSynced,
-
-    // API data for reference
-    apiCart,
-    apiError,
+    addToCart: optimisticAddToCart,
+    updateQuantity: optimisticUpdateQuantity,
+    removeFromCart: optimisticRemoveFromCart,
+    clearCart: optimisticClearCart,
+    isLoading:
+      addMutation.isPending ||
+      updateMutation.isPending ||
+      removeMutation.isPending ||
+      clearMutation.isPending,
+    errors: {
+      add: addMutation.error,
+      update: updateMutation.error,
+      remove: removeMutation.error,
+      clear: clearMutation.error,
+    },
   };
 };
 
-// Utility functions
-export const getCartItemPrice = (item: CartItem): number => {
-  if (item.variantId && item.product.variants.length > 0) {
-    const variant = item.product.variants.find((v) => v.id === item.variantId);
-    if (variant?.price) {
-      return Number(variant.price);
+export const useCartQuery = () => {
+  const { syncCart } = useCartStore();
+  const queryResult = useQuery({
+    queryKey: ["cart"],
+    queryFn: cartApi.getCart,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  useEffect(() => {
+    if (queryResult.isSuccess) {
+      syncCart(queryResult.data.items || queryResult.data);
     }
-  }
-  return Number(item.product.price);
-};
+  }, [queryResult.isSuccess, queryResult.data, syncCart]);
 
-export const getCartItemTotalPrice = (item: CartItem): number => {
-  return getCartItemPrice(item) * item.quantity;
-};
-
-export const getCartItemImage = (item: CartItem): string | undefined => {
-  const primaryImage = item.product.images.find((img) => img.isPrimary);
-  if (primaryImage) {
-    return primaryImage.url;
-  }
-  // Fallback to first image if no primary image
-  return item.product.images[0]?.url;
-};
-
-export const getCartItemVariant = (item: CartItem) => {
-  if (!item.variantId) return null;
-  return item.product.variants.find((v) => v.id === item.variantId) || null;
+  return queryResult;
 };

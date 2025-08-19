@@ -5,6 +5,8 @@ import { auth } from "./auth/better-auth.js";
 import productsRouter from "./routes/products.js";
 import categoriesRouter from "./routes/categories.js";
 import cartRouter from "./routes/cart.js";
+import usersRouter from "./routes/users.js";
+import addressesRouter from "./routes/addresses.js";
 import { Buffer } from "buffer";
 
 const app = new Hono();
@@ -44,6 +46,8 @@ app.on(["GET", "POST", "PUT", "DELETE", "PATCH"], "/api/auth/*", async (c) => {
 app.route("/api/products", productsRouter);
 app.route("/api/categories", categoriesRouter);
 app.route("/api/cart", cartRouter);
+app.route("/api/users", usersRouter);
+app.route("/api/addresses", addressesRouter);
 
 // Health check
 app.get("/health", (c) => {

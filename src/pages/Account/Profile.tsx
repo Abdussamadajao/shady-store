@@ -1,40 +1,80 @@
 import { useState } from "react";
-import { User, MapPin, Edit, Save, X } from "lucide-react";
+import { User, MapPin, Edit, Save, X, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/hook-form";
+import { RHFTextField, RHFTextArea } from "@/components/hook-form";
+import { useUser } from "@/api/hooks";
+import {
+  profileSchema,
+  type ProfileFormData,
+} from "@/pages/Account/profileSchemas";
+import { toast } from "sonner";
+import React from "react";
+import { authClient } from "@/lib/auth-client";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+234 801 234 5678",
-    address: "123 Main Street",
-    city: "Lagos",
-    state: "Lagos",
-    zipCode: "100001",
-    bio: "Passionate shopper and food enthusiast. Love exploring new products and sharing experiences.",
+  const { data: session, isPending } = authClient.useSession();
+
+  const profile = session?.user;
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: profile?.firstName || "",
+      lastName: profile?.lastName || "",
+      phone: profile?.phone || "",
+      image: profile?.avatar || "",
+      email: profile?.email || "",
+    },
   });
 
-  const [editForm, setEditForm] = useState(profile);
+  // Update form values when profile data changes
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        phone: profile.phone || "",
+        image: profile.avatar || "",
+        email: profile.email || "",
+      });
+    }
+  }, [profile, form]);
 
-  const handleSave = () => {
-    setProfile(editForm);
-    setIsEditing(false);
+  // const handleSave = async (data: ProfileFormData) => {
+  //   try {
+  //     await mutations.updateProfileAsync(data);
+  //     toast.success("Profile updated successfully!");
+  //     setIsEditing(false);
+  //   } catch (error) {
+  //     toast.error("Failed to update profile. Please try again.");
+  //     console.error("Profile update error:", error);
+  //   }
+  // };
+  const onSubmit = (data: ProfileFormData) => {
+    console.log(data);
   };
 
   const handleCancel = () => {
-    setEditForm(profile);
+    form.reset();
     setIsEditing(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setEditForm((prev) => ({ ...prev, [field]: value }));
+  const handleEdit = () => {
+    setIsEditing(true);
   };
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -48,7 +88,7 @@ const Profile = () => {
         </div>
         {!isEditing ? (
           <Button
-            onClick={() => setIsEditing(true)}
+            onClick={handleEdit}
             className="bg-secondary hover:bg-secondary-100"
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -56,13 +96,6 @@ const Profile = () => {
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button
-              onClick={handleSave}
-              className="bg-secondary hover:bg-secondary-100"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </Button>
             <Button variant="outline" onClick={handleCancel}>
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -71,186 +104,156 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Profile Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Personal Information */}
+      {/* Profile Form */}
+      <Form form={form} onSubmit={onSubmit}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Personal Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-secondary" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <RHFTextField
+                  name="firstName"
+                  label="First Name"
+                  disabled={!isEditing}
+                  inputProps={{
+                    placeholder: "Enter your first name",
+                  }}
+                />
+                <RHFTextField
+                  name="lastName"
+                  label="Last Name"
+                  disabled={!isEditing}
+                  inputProps={{
+                    placeholder: "Enter your last name",
+                  }}
+                />
+              </div>
+              <RHFTextField
+                name="email"
+                label="Email Address"
+                disabled={true}
+                inputProps={{
+                  type: "email",
+                  value: profile?.email || "",
+                  className: "bg-gray-50 cursor-not-allowed",
+                }}
+              />
+              <RHFTextField
+                name="phone"
+                label="Phone Number"
+                disabled={!isEditing}
+                inputProps={{
+                  type: "tel",
+                  placeholder: "+1 (555) 123-4567",
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Account Status
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-secondary" />
+                Account Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Email Verified</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      profile?.emailVerified ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {profile?.emailVerified ? "Verified" : "Not Verified"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Phone Verified</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      profile?.phoneVerified ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {profile?.phoneVerified ? "Verified" : "Not Verified"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Two-Factor Auth</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      profile?.twoFactorEnabled
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {profile?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Account Status</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      profile?.isActive ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {profile?.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card> */}
+        </div>
+
+        {/* Account Statistics */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-secondary" />
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                {isEditing ? (
-                  <Input
-                    id="firstName"
-                    value={editForm.firstName}
-                    onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
-                    }
-                  />
-                ) : (
-                  <p className="text-gray-900 font-medium">
-                    {profile.firstName}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                {isEditing ? (
-                  <Input
-                    id="lastName"
-                    value={editForm.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                  />
-                ) : (
-                  <p className="text-gray-900 font-medium">
-                    {profile.lastName}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              {isEditing ? (
-                <Input
-                  id="email"
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                />
-              ) : (
-                <p className="text-gray-900 font-medium">{profile.email}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              {isEditing ? (
-                <Input
-                  id="phone"
-                  value={editForm.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                />
-              ) : (
-                <p className="text-gray-900 font-medium">{profile.phone}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Address Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-secondary" />
-              Address Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="address">Street Address</Label>
-              {isEditing ? (
-                <Textarea
-                  id="address"
-                  value={editForm.address}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
-                  rows={2}
-                />
-              ) : (
-                <p className="text-gray-900 font-medium">{profile.address}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city">City</Label>
-                {isEditing ? (
-                  <Input
-                    id="city"
-                    value={editForm.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-gray-900 font-medium">{profile.city}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                {isEditing ? (
-                  <Input
-                    id="state"
-                    value={editForm.state}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-gray-900 font-medium">{profile.state}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="zipCode">ZIP Code</Label>
-                {isEditing ? (
-                  <Input
-                    id="zipCode"
-                    value={editForm.zipCode}
-                    onChange={(e) =>
-                      handleInputChange("zipCode", e.target.value)
-                    }
-                  />
-                ) : (
-                  <p className="text-gray-900 font-medium">{profile.zipCode}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Bio */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>About Me</CardTitle>
+            <CardTitle>Account Statistics</CardTitle>
           </CardHeader>
           <CardContent>
-            {isEditing ? (
-              <Textarea
-                value={editForm.bio}
-                onChange={(e) => handleInputChange("bio", e.target.value)}
-                rows={4}
-                placeholder="Tell us about yourself..."
-              />
-            ) : (
-              <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-secondary">24</div>
+                <div className="text-sm text-gray-600">Orders Placed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-secondary">18</div>
+                <div className="text-sm text-gray-600">Reviews Written</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-secondary">12</div>
+                <div className="text-sm text-gray-600">Months Member</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Account Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-secondary">24</div>
-              <div className="text-sm text-gray-600">Orders Placed</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-secondary">18</div>
-              <div className="text-sm text-gray-600">Reviews Written</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-secondary">12</div>
-              <div className="text-sm text-gray-600">Months Member</div>
-            </div>
+        {/* Form Actions */}
+        {/* {isEditing && (
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-secondary hover:bg-secondary-100"
+            >
+              {mutations.isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Save Changes
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        )} */}
+      </Form>
     </div>
   );
 };

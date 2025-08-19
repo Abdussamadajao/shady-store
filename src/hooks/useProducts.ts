@@ -126,35 +126,42 @@ export const useRelatedProducts = (productId: string, limit: number = 4) => {
     useProduct(productId);
 
   return useQuery({
-    queryKey: ["products", "related", productId, limit],
+    queryKey: [
+      "products",
+      "related",
+      productId,
+      productData?.category?.id,
+      limit,
+    ],
     queryFn: async () => {
       if (!productData?.category?.id) {
-        console.log("No category ID found for product:", productId);
         return {
           products: [],
           pagination: { page: 1, limit, total: 0, pages: 0 },
         };
       }
 
-      console.log(
-        "Fetching related products for category:",
-        productData.category.id
-      );
       const result = await fetchProducts({
         category: productData.category.id,
         limit: limit + 1, // +1 to account for excluding current product
       });
-      console.log("Related products result:", result);
       return result;
     },
     enabled: !!productId && !!productData?.category?.id && !productLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    select: (data: ProductsResponse) => {
+    select: (data: ProductsResponse | undefined) => {
+      if (!data?.products) {
+        return {
+          products: [],
+          pagination: { page: 1, limit, total: 0, pages: 0 },
+        };
+      }
+
       const filtered = data.products
         .filter((product: Product) => product.id !== productId)
         .slice(0, limit);
-      console.log("Filtered related products:", filtered);
+
       return {
         ...data,
         products: filtered,

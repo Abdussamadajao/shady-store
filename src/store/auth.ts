@@ -5,12 +5,28 @@ import { storeManager } from "@/lib/store-manager";
 
 import type { Session } from "better-auth";
 
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image?: string;
+  createdAt: string;
+  updatedAt: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  avatar?: string;
+  role: string; // or more specific union type
+  isActive: boolean;
+};
+
 export interface AuthState {
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
   session: Session | null;
 
-  setAuth: (data: { user: any; session: Session }) => void;
+  setAuth: (data: { user: User; session: Session }) => void;
   logout: () => void;
 }
 

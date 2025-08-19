@@ -45,7 +45,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   return (
     <div className="h-full flex flex-col space-y-6">
       {/* Main Product Image Slider - Full height */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 flex flex-col">
+      <div className="flex-1 bg-white rounded-2xl  p-4 sm:p-6 lg:p-8 flex flex-col">
         <div className="flex-1 overflow-hidden rounded-xl" ref={emblaRef}>
           <div className="flex h-full">
             {images.map((image, index) => (

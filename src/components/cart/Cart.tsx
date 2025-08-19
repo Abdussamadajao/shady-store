@@ -12,18 +12,14 @@ import {
 } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "@/routes/paths";
-import {
-  useCartItems,
-  useCartTotal,
-  useCartPendingSync,
-  useCartStore,
-} from "@/store/cart";
+import useCartStore from "@/store/cart";
+import { useCartMutations } from "@/api";
 
 // Subtotal Component
 const Subtotal: React.FC = () => {
-  const cartItems = useCartItems();
-  const cartTotal = useCartTotal();
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const { items: cartItems, totalPrice } = useCartStore();
+
+  const subtotal = totalPrice;
 
   return (
     <div className="flex flex-col gap-2">
@@ -31,10 +27,10 @@ const Subtotal: React.FC = () => {
         <span>
           <ShoppingCart className="h-5 w-5" />
         </span>
-        {cartItemCount} items
+        {cartItems.length} items
       </div>
       <span className="inline-flex items-center justify-center w-full h-8 overflow-hidden text-secondary-100 bg-white rounded text-sm font-medium px-2">
-        {formatNGN(cartTotal)}
+        {formatNGN(subtotal)}
       </span>
     </div>
   );
@@ -45,9 +41,8 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
 }) => {
-  const cartItems = useCartItems();
-  const cartTotal = useCartTotal();
-
+  const { items: cartItems, totalPrice } = useCartStore();
+  const { updateQuantity, removeFromCart } = useCartMutations();
   const navigate = useNavigate();
 
   return (
@@ -79,28 +74,54 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 >
                   {/* Item Image */}
                   <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">🛒</span>
+                    <img
+                      src={item?.product?.images[0]?.url}
+                      alt={item?.product?.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   {/* Item Details */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-800 truncate">
-                      {item.product.name}
+                      {item?.product?.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {/* {item.product. || "Uncategorized"} */}
-                    </p>
+
                     <p className="text-lg font-semibold text-secondary-100">
-                      {formatNGN(item.product.price)}
+                      {formatNGN(item?.product?.price || "0")}
                     </p>
                   </div>
 
                   {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() =>
+                        item.quantity > 1
+                          ? updateQuantity(item?.id || "", item.quantity - 1)
+                          : removeFromCart(item?.id || "")
+                      }
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    </button>
                     <span className="w-8 text-center font-medium">
                       {item.quantity}
                     </span>
+                    <button
+                      onClick={() =>
+                        updateQuantity(item?.id || "", item.quantity + 1)
+                      }
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
+                  <button
+                    onClick={() => removeFromCart(item?.id || "")}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -114,7 +135,7 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-xl font-bold text-secondary-100">
-                  {formatNGN(cartTotal)}
+                  {formatNGN(totalPrice)}
                 </span>
               </div>
               <Button
@@ -137,8 +158,8 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
 }) => {
-  const cartItems = useCartItems();
-  const cartTotal = useCartTotal();
+  const { items: cartItems, totalPrice } = useCartStore();
+  const { updateQuantity, removeFromCart } = useCartMutations();
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -174,26 +195,55 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 >
                   {/* Item Image */}
                   <div className="flex-shrink-0 w-14 h-14 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                    <span className="text-xl">🛒</span>
+                    <img
+                      src={item?.product?.images[0]?.url}
+                      alt={item?.product?.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   {/* Item Details */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-800 truncate text-sm">
-                      {item.product.name}
+                      {item?.product?.name}
                     </h3>
 
                     <p className="text-base font-semibold text-secondary-100">
-                      {formatNGN(item.product.price)}
+                      {formatNGN(item?.product?.price || "0")}
                     </p>
                   </div>
 
                   {/* Quantity */}
+                  {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
-                    <span className="w-8 text-center font-medium text-sm">
+                    <button
+                      onClick={() =>
+                        item.quantity > 1
+                          ? updateQuantity(item?.id || "", item.quantity - 1)
+                          : removeFromCart(item?.id || "")
+                      }
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    </button>
+                    <span className="w-8 text-center font-medium">
                       {item.quantity}
                     </span>
+                    <button
+                      onClick={() =>
+                        updateQuantity(item?.id || "", item.quantity + 1)
+                      }
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
+                  <button
+                    onClick={() => removeFromCart(item?.id || "")}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -209,7 +259,7 @@ const MobileCart: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   Total:
                 </span>
                 <span className="text-xl font-bold text-secondary-100">
-                  {formatNGN(cartTotal)}
+                  {formatNGN(totalPrice)}
                 </span>
               </div>
               <Button className="w-full bg-secondary hover:bg-secondary-100 py-4 text-lg font-medium rounded-xl">
@@ -228,12 +278,9 @@ const Cart = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
-  // Extract cart values from the cart store
-  const cartItems = useCartItems();
-  const cartTotal = useCartTotal();
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const pendingSync = useCartPendingSync();
-  const { syncToDatabase } = useCartStore();
+  const { totalItems, totalPrice } = useCartStore();
+
+  const subtotal = totalPrice;
 
   const handleCartClick = () => {
     // Check if mobile or desktop
@@ -272,13 +319,13 @@ const Cart = () => {
           {/* Left Side - Cart Icon and Item Count */}
           <div className="flex items-center gap-2 text-white">
             <ShoppingCart className="h-5 w-5" />
-            <span className="text-sm font-medium">{cartItemCount} items</span>
+            <span className="text-sm font-medium">{totalItems} items</span>
           </div>
 
           {/* Right Side - Total Price */}
           <div className="bg-white rounded-full flex items-center justify-center px-3 py-1 w-16 h-10">
             <span className="text-sm font-semibold text-secondary-100">
-              {formatNGN(cartTotal)}
+              {formatNGN(subtotal)}
             </span>
           </div>
         </div>
@@ -289,22 +336,6 @@ const Cart = () => {
 
       {/* Mobile Cart */}
       <MobileCart isOpen={isMobileCartOpen} onClose={closeMobileCart} />
-
-      {/* Sync Status Indicator (for debugging) */}
-      {pendingSync && (
-        <div className="fixed top-4 right-4 bg-orange-500 text-white px-3 py-2 rounded-lg shadow-lg z-50">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-sm">Syncing cart...</span>
-            <button
-              onClick={syncToDatabase}
-              className="text-xs bg-white text-orange-500 px-2 py-1 rounded hover:bg-gray-100"
-            >
-              Sync Now
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

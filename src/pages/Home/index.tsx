@@ -32,28 +32,7 @@ const Home: React.FC = () => {
         {/* Mobile & Tablet Layout */}
         <div className="block xl:hidden">
           {/* Mobile Header with Filter Toggle */}
-          <div className="sticky top-16 z-10 bg-white border-b border-gray-200 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-            <div className="flex items-center justify-between py-3">
-              <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-semibold text-gray-900">
-                  Products
-                </h1>
-                <span className="text-sm text-gray-500">•</span>
-                <span className="text-sm text-gray-500">All Categories</span>
-              </div>
-
-              {/* Mobile Filter Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center space-x-2 bg-white border-gray-300 hover:bg-gray-50"
-              >
-                <FilterIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Filter</span>
-              </Button>
-            </div>
-          </div>
-
+          <ImageSlider images={images} className="w-full" />
           {/* Mobile Products */}
           <div className="py-4">
             <Product />
@@ -76,11 +55,10 @@ const Home: React.FC = () => {
             </div>
 
             {/* Main Content Area - Center */}
-            <main className="col-span-9 lg:col-span-9 xl:col-span-10 2xl:col-span-9 overflow-y-auto">
+            <main className="col-span-9 lg:col-span-9 xl:col-span-10 2xl:col-span-9 overflow-y-auto flex flex-col gap-4">
               {/* Image Slider - Above products */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                <ImageSlider images={images} className="w-full" />
-              </div>
+
+              <ImageSlider images={images} className="w-full" />
 
               {/* Desktop Header with View Toggle */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -133,18 +111,6 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* Sort Options */}
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600 font-medium">
-                        Sort:
-                      </span>
-                      <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="name">Name: A to Z</option>
-                      </select>
-                    </div>
                   </div>
                 </div>
               </div>

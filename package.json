@@ -3,14 +3,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "vite",
+    "dev:backend": "tsx watch src/server/hono-server.ts",
     "build": "tsc -b && vite build",
+    "build:frontend": "vite build",
+    "build:backend": "tsc -b src/server/tsconfig.json",
+    "build:all": "concurrently \"npm run build:frontend\" \"npm run build:backend\"",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server:dev": "tsx watch src/server/hono-server.ts",
-    "server:build": "tsc -p src/server/tsconfig.json",
-    "server:start": "node src/server/dist/hono-server.js"
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:frontend": "vite preview",
+    "start:backend": "node src/server/dist/hono-server.js"
   },
   "dependencies": {
     "@better-auth/utils": "^0.2.6",
@@ -75,6 +79,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
+    "use-debounce": "^10.0.5",
     "vaul": "^1.1.2",
     "zod": "^4.0.17",
     "zustand": "^5.0.7"

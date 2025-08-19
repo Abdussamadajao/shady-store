@@ -11,6 +11,7 @@ function paths(root: string, route: string) {
 }
 
 export const PATH_AUTH = {
+  root: ROOT_AUTH,
   login: paths(ROOT_AUTH, "/login"),
   signup: paths(ROOT_AUTH, "/signup"),
   forgotPassword: paths(ROOT_AUTH, "/forgot-password"),

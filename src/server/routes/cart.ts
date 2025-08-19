@@ -23,11 +23,21 @@ async function getCurrentUser(c: any) {
     const cookieHeader = c.req.header("cookie") || "";
     console.log("Cookie header:", cookieHeader);
 
-    const sessionCookie = cookieHeader
+    // Check for both possible session cookie names
+    let sessionCookie = cookieHeader
       .split(";")
       .find((cookie: string) =>
         cookie.trim().startsWith("pick-bazar.session_data=")
       );
+
+    // If session_data not found, try session_token
+    if (!sessionCookie) {
+      sessionCookie = cookieHeader
+        .split(";")
+        .find((cookie: string) =>
+          cookie.trim().startsWith("pick-bazar.session_token=")
+        );
+    }
 
     if (!sessionCookie) {
       console.log("No session cookie found");
@@ -233,7 +243,7 @@ cartRouter.put("/:id", requireAuth, async (c) => {
     if (!quantity || quantity < 1) {
       return c.json({ error: "Valid quantity is required" }, 400);
     }
-
+    console.log("id", id);
     // Verify the cart item belongs to the user
     const cartItem = await prisma.cartItem.findFirst({
       where: { id, userId: user.id },

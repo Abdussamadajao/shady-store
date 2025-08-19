@@ -37,6 +37,7 @@ interface ProductsActions {
   // Filtering and search
   setSelectedCategory: (category: string) => void;
   setSearchQuery: (query: string) => void;
+  performSearch: (query: string) => void;
   setSortBy: (sortBy: ProductsState["sortBy"]) => void;
   setSortOrder: (order: "asc" | "desc") => void;
   resetFilters: () => void;
@@ -104,6 +105,11 @@ export const useProductsStore = create<ProductsStore>()(
       },
 
       setSearchQuery: (query) => {
+        set({ searchQuery: query });
+        // Don't automatically filter - only filter when search is explicitly requested
+      },
+
+      performSearch: (query) => {
         set({ searchQuery: query });
         get().filterProducts();
       },

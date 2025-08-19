@@ -3,33 +3,23 @@ import { formatNGN } from "@/utils/currency";
 import type { Product } from "@/hooks/useProducts";
 import ProductActions from "./ProductActions";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Star, Tag, Info } from "lucide-react";
+import { Star } from "lucide-react";
 
 interface ProductDetailsProps {
   product: Product;
   cartQuantity: number;
-  onAddToCart: (product: Product) => void;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  isAddingToCart?: boolean;
-  isUpdatingCart?: boolean;
+  onAddToCart: (e: React.MouseEvent) => void;
+  onIncrement: (e: React.MouseEvent) => void;
+  onDecrement: (e: React.MouseEvent) => void;
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({
   product,
   cartQuantity,
   onAddToCart,
-  onUpdateQuantity,
-  isAddingToCart = false,
-  isUpdatingCart = false,
+  onIncrement,
+  onDecrement,
 }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="h-full flex flex-col space-y-6 lg:space-y-8">
       {/* Product Name */}
@@ -79,9 +69,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
           product={product}
           cartQuantity={cartQuantity}
           onAddToCart={onAddToCart}
-          onUpdateQuantity={onUpdateQuantity}
-          isAddingToCart={isAddingToCart}
-          isUpdatingCart={isUpdatingCart}
+          onIncrement={onIncrement}
+          onDecrement={onDecrement}
         />
       </div>
 

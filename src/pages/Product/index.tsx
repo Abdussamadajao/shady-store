@@ -1,42 +1,33 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useProduct, useRelatedProducts } from "@/hooks/useProducts";
-import type { Product } from "@/hooks/useProducts";
-// import { useCartManager } from "@/lib/use-cart";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import {
   ProductImageGallery,
-  ProductDetails,
   ProductHeader,
+  ProductDetails,
   RelatedProducts,
-  MobileStickyActions,
 } from "@/components/product";
 import { Info, Tag, Calendar } from "lucide-react";
 import { formatNGN } from "@/utils/currency";
+import useCartStore from "@/store/cart";
+import { useCartMutations } from "@/api";
+import { useAuthStore } from "@/store/auth";
 
 const ProductPage: React.FC = () => {
   const { id } = useParams();
-
-  // Auto-scroll to top when navigating to product detail
   useScrollToTop();
-
-  // Get product details from API
   const {
     data: product,
     isLoading: productLoading,
     error: productError,
   } = useProduct(id || "");
+  const { addToCart, updateQuantity, removeFromCart } = useCartMutations();
+  const { items: cartItems } = useCartStore();
+  const cartItem = cartItems.find((item) => item.productId === id);
+  const cartQuantity = cartItem?.quantity || 0;
+  const { user } = useAuthStore();
 
-  // const {
-  //   addToCart,
-  //   updateCartItemQuantity,
-  //   removeFromCart,
-  //   cartItems,
-  //   isAddingToCart,
-  //   isUpdatingCart,
-  // } = useCartManager();
-
-  // Get product images from API data or use placeholder
   const productImages = product?.images?.map((img) => img.url) || [
     "https://via.placeholder.com/400x400?text=Product+Image",
     "https://via.placeholder.com/400x400?text=Product+Image+2",
@@ -45,42 +36,47 @@ const ProductPage: React.FC = () => {
     "https://via.placeholder.com/400x400?text=Product+Image+5",
   ];
 
-  // Get related products using the API hook
   const { data: relatedProductsData, isLoading: relatedLoading } =
     useRelatedProducts(id || "", 4);
   const relatedProducts = relatedProductsData?.products || [];
 
-  // Find cart item for this product
-  // const cartItem = cartItems.find(
-  //   (item) => item.productId === product?.id || item.id === product?.id
-  // );
-  // const cartQuantity = cartItem?.quantity || 0;
-
-  const handleAddToCart = async (product: Product) => {
-    // await addToCart({
-    //   id: product.id,
-    //   images: product.images.map((img) => img.url),
-    //   price: product.price.toString(),
-    //   name: product.name,
-    //   count: "1",
-    //   category: product.category.name,
-    //   detail: product.description || "",
-    // });
+  const handleAddItem = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      productId: id || "",
+      userId: user?.id,
+      quantity: 1,
+      product: {
+        id: id || "",
+        name: product?.name || "",
+        price: product?.price || ("" as any),
+        images: productImages.map((image) => ({
+          id: image,
+          url: image,
+          alt: product?.name || "",
+          sortOrder: 0,
+          isPrimary: true,
+        })),
+        variants: [],
+      },
+    });
   };
 
-  const handleUpdateQuantity = async (
-    productId: string,
-    newQuantity: number
-  ) => {
-    // if (newQuantity <= 0) {
-    //   if (cartItem) {
-    //     // await removeFromCart(cartItem.id);
-    //   }
-    //   return;
-    // }
-    // if (cartItem) {
-    //   // await updateCartItemQuantity(cartItem.id, newQuantity);
-    // }
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateQuantity(cartItem?.id || "", cartQuantity + 1);
+  };
+
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartQuantity > 1) {
+      updateQuantity(cartItem?.id || "", cartQuantity - 1);
+    } else {
+      removeFromCart(cartItem?.id || "");
+    }
   };
 
   if (productLoading) {
@@ -142,14 +138,13 @@ const ProductPage: React.FC = () => {
               {/* Product Details + Add to Cart */}
               <div className="xl:col-span-1 bg-white p-6 lg:p-8 xl:p-12 border-l border-gray-100">
                 <div className="sticky top-8">
-                  {/* <ProductDetails
+                  <ProductDetails
                     product={product}
                     cartQuantity={cartQuantity}
-                    onAddToCart={handleAddToCart}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    isAddingToCart={isAddingToCart}
-                    isUpdatingCart={isUpdatingCart}
-                  /> */}
+                    onAddToCart={handleAddItem}
+                    onIncrement={handleIncrement}
+                    onDecrement={handleDecrement}
+                  />
                 </div>
               </div>
             </div>
@@ -340,32 +335,22 @@ const ProductPage: React.FC = () => {
 
           {/* Section 3: Related Products */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 lg:p-8 xl:p-12">
-            {/* <RelatedProducts
+            <RelatedProducts
               products={relatedProducts}
               isLoading={relatedLoading}
-              getCartItemQuantity={(productId: string) => {
-                const item = cartItems.find(
-                  (item) =>
-                    item.productId === productId || item.id === productId
-                );
-                return item?.quantity || 0;
-              }}
-              onAddToCart={handleAddToCart}
-              onUpdateQuantity={handleUpdateQuantity}
-            /> */}
+            />
           </div>
 
           {/* Mobile Sticky Add to Cart */}
-          <div className="mt-8">
-            {/* <MobileStickyActions
+          {/* <div className="mt-8">
+            <MobileStickyActions
               product={product}
               cartQuantity={cartQuantity}
-              onAddToCart={handleAddToCart}
-              onUpdateQuantity={handleUpdateQuantity}
-              isAddingToCart={isAddingToCart}
-              isUpdatingCart={isUpdatingCart}
-            /> */}
-          </div>
+              onAddToCart={handleAddItem}
+              onIncrement={handleIncrement}
+              onDecrement={handleDecrement}
+            />
+          </div> */}
         </div>
       </div>
     </div>

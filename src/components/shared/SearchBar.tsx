@@ -8,9 +8,11 @@ export interface SearchBarProps {
   placeholder?: string;
   className?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   onSearch?: (query: string) => void;
   onClear?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   autoFocus?: boolean;
   disabled?: boolean;
 }
@@ -22,6 +24,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onChange,
   onSearch,
   onClear,
+  onFocus,
+  onBlur,
   autoFocus = false,
   disabled = false,
 }) => {
@@ -40,7 +44,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const handleClear = () => {
-    onChange("");
+    onChange?.("");
     if (onClear) {
       onClear();
     }
@@ -58,8 +62,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            if (onChange) {
+              onChange(e.target.value);
+            } else {
+              onSearch?.(e.target.value);
+            }
+          }}
           onKeyDown={handleKeyDown}
+          onFocus={onFocus}
+          onBlur={onBlur}
           disabled={disabled}
           className="pl-10 pr-10 font-inter"
         />
@@ -81,7 +93,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <Button
           type="button"
           onClick={() => onSearch(value)}
-          disabled={disabled || !value.trim()}
+          disabled={disabled || !value?.trim()}
           className="ml-2 font-poppins"
         >
           Search

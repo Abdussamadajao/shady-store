@@ -77,7 +77,7 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden w-full rounded-xl shadow-lg bg-gray-100",
+        "relative overflow-hidden w-full rounded-lg sm:rounded-xl shadow-lg bg-gray-100",
         className
       )}
       style={style}
@@ -92,38 +92,38 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({
               <img
                 src={image.src}
                 alt={image.alt}
-                className="w-full h-[400px] object-cover"
+                className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] object-cover"
               />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Navigation Buttons - Responsive */}
-      <div className="absolute inset-0 flex items-center justify-between p-2 sm:p-4 pointer-events-none">
+      {/* Navigation Buttons - Enhanced Responsive */}
+      <div className="absolute inset-0 flex items-center justify-between p-1 sm:p-2 md:p-4 pointer-events-none">
         <button
           onClick={scrollPrev}
           disabled={!prevBtnEnabled}
-          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+          className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
         >
-          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
         </button>
         <button
           onClick={scrollNext}
           disabled={!nextBtnEnabled}
-          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+          className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
         >
-          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
         </button>
       </div>
 
-      {/* Progress Indicators - Desktop */}
-      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-        <div className="flex space-x-2">
+      {/* Progress Indicators - Enhanced Responsive */}
+      <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 transform -translate-x-1/2">
+        <div className="flex space-x-1 sm:space-x-2">
           {images.map((_, index) => (
             <div
               key={index}
-              className="w-2 h-2 bg-white/80 rounded-full shadow-sm"
+              className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 bg-white/80 rounded-full shadow-sm"
             />
           ))}
         </div>
