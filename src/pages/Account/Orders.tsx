@@ -3,7 +3,7 @@ import { Package, Truck, CheckCircle, Clock, Eye, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatNGN } from "@/utils/currency";
+import { formatNGN } from "@/utils";
 
 const Orders = () => {
   const [orders] = useState([
@@ -54,7 +54,7 @@ const Orders = () => {
       total: 5600,
       items: [
         { name: "Fresh Fish", quantity: 1, price: 2500 },
-        { name: "Vegetables Mix", quantity: 1, price: 1800 },
+        { name: "Fresh Vegetables Mix", quantity: 1, price: 1800 },
         { name: "Local Spices", quantity: 1, price: 1300 },
       ],
       deliveryAddress: "123 Main Street, Lagos, Lagos 100001",

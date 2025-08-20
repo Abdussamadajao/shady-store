@@ -34,5 +34,7 @@ export const PATH = {
     settings: paths(ROOT_ACCOUNT, "/settings"),
     orders: paths(ROOT_ACCOUNT, "/orders"),
     profile: paths(ROOT_ACCOUNT, "/profile"),
+    wishlist: paths(ROOT_ACCOUNT, "/wishlist"),
+    reviews: paths(ROOT_ACCOUNT, "/reviews"),
   },
 } as const;

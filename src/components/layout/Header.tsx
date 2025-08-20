@@ -167,20 +167,17 @@ const Header: React.FC = () => {
                         <AvatarImage src={user?.image} />
                         <AvatarFallback
                           className={`${getAvatarColor(
-                            user?.name || user?.firstName || "User"
+                            user?.firstName || "User"
                           )} text-white`}
                         >
                           {user?.firstName?.charAt(0) ||
-                            user?.name?.charAt(0) ||
+                            user?.lastName?.charAt(0) ||
                             "A"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="hidden md:flex flex-col items-start">
                         <p className="text-sm font-medium text-foreground">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
+                          {user?.firstName} {user?.lastName}
                         </p>
                       </div>
                       <ChevronDown className="h-4 w-4 text-foreground" />

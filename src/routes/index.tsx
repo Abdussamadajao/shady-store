@@ -22,7 +22,8 @@ import Help from "../pages/Help";
 import NotFound from "../pages/NotFound";
 
 // Account Pages
-import { Profile, Orders, Settings } from "../pages/Account";
+import { Profile, Settings, Wishlist, Reviews } from "../pages/Account";
+import OrdersPage from "../pages/Account/OrdersPage";
 
 // Layouts
 import { PATH, PATH_AUTH } from "./paths";
@@ -121,11 +122,19 @@ export const routes: RouteObject[] = [
               },
               {
                 path: PATH.account.orders,
-                element: <Orders />,
+                element: <OrdersPage />,
               },
               {
                 path: PATH.account.profile,
                 element: <Profile />,
+              },
+              {
+                path: PATH.account.wishlist,
+                element: <Wishlist />,
+              },
+              {
+                path: PATH.account.reviews,
+                element: <Reviews />,
               },
             ],
           },

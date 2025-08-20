@@ -7,6 +7,9 @@ import categoriesRouter from "./routes/categories.js";
 import cartRouter from "./routes/cart.js";
 import usersRouter from "./routes/users.js";
 import addressesRouter from "./routes/addresses.js";
+import wishlistRouter from "./routes/wishlist.js";
+import reviewsRouter from "./routes/reviews.js";
+import ordersRouter from "./routes/orders.js";
 import { Buffer } from "buffer";
 
 const app = new Hono();
@@ -48,6 +51,9 @@ app.route("/api/categories", categoriesRouter);
 app.route("/api/cart", cartRouter);
 app.route("/api/users", usersRouter);
 app.route("/api/addresses", addressesRouter);
+app.route("/api/wishlist", wishlistRouter);
+app.route("/api/reviews", reviewsRouter);
+app.route("/api/orders", ordersRouter);
 
 // Health check
 app.get("/health", (c) => {
