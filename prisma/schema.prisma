@@ -251,6 +251,7 @@ model Order {
   notes             String?
   shippingAddressId String?
   billingAddressId  String?
+  paidAt            DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   orderItems        OrderItem[]
@@ -280,20 +281,38 @@ model OrderItem {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  orderId       String
-  amount        Decimal       @db.Decimal(10, 2)
-  currency      String        @default("USD")
-  method        PaymentMethod
-  status        PaymentStatus @default(PENDING)
-  transactionId String?
-  gateway       String?
-  metadata      String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id                    String        @id @default(cuid())
+  orderId               String
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("USD")
+  method                PaymentMethod
+  status                PaymentStatus @default(PENDING)
+  transactionId         String?
+  gateway               String?
+  metadata              Json?
+  stripePaymentIntentId String?       @unique
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds               Refund[]
 
   @@map("payments")
+}
+
+model Refund {
+  id              String        @id @default(cuid())
+  paymentId       String
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String
+  reason          String?
+  status          RefundStatus  @default(PENDING)
+  stripeRefundId  String?       @unique
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
 }
 
 model CartItem {
@@ -378,6 +397,14 @@ enum PaymentStatus {
   FAILED
   CANCELLED
   REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 enum TwoFactorTokenType {

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../service";
+import type { CartItem } from "@/types";
+import { toast } from "sonner";
 
 // Get user's orders
 export const useOrders = (page = 1, limit = 10, status?: string) => {
@@ -39,6 +41,51 @@ export const useOrderTracking = (orderId: string) => {
   });
 };
 
+// Create order mutation
+export const useCreateOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderData: {
+      items: CartItem[];
+      shippingAddressId: string;
+      billingAddressId?: string;
+      deliveryTime?: string;
+      shippingAmount?: number;
+      taxAmount?: number;
+      notes?: string;
+      paymentMethod?: "STRIPE" | "CASH_ON_DELIVERY";
+    }) => {
+      // Transform cart items to order items format
+      const orderItems = orderData.items
+        .filter((item) => item.productId) // Filter out items without productId
+        .map((item) => ({
+          productId: item.productId!,
+          quantity: item.quantity,
+          price: parseFloat(item.product?.price || "0"),
+        }));
+
+      return ordersApi.createOrder({
+        ...orderData,
+        items: orderItems,
+      });
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch orders
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "stats"] });
+
+      // Add the new order to cache
+      queryClient.setQueryData(["orders", data.order.id], {
+        order: data.order,
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to create order:", error);
+    },
+  });
+};
+
 // Cancel order mutation
 export const useCancelOrder = () => {
   const queryClient = useQueryClient();
@@ -50,7 +97,7 @@ export const useCancelOrder = () => {
       // Invalidate and refetch orders
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["orders", "stats"] });
-
+      toast.success("Order cancelled successfully");
       // Update specific order in cache
       queryClient.setQueryData(["orders", variables.orderId], {
         order: data.order,
@@ -94,12 +141,17 @@ export const useRequestRefund = () => {
 
 // Optimistic order operations
 export const useOrderMutations = () => {
+  const createMutation = useCreateOrder();
   const cancelMutation = useCancelOrder();
   const refundMutation = useRequestRefund();
 
   return {
+    createOrder: createMutation.mutate,
     cancelOrder: cancelMutation.mutate,
     requestRefund: refundMutation.mutate,
-    isLoading: cancelMutation.isPending || refundMutation.isPending,
+    isLoading:
+      createMutation.isPending ||
+      cancelMutation.isPending ||
+      refundMutation.isPending,
   };
 };

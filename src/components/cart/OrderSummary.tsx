@@ -3,29 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNGN } from "@/utils/currency";
 import useCartStore from "@/store/cart";
 import {
-  useSelectedAddressId,
-  useSelectedContactId,
   useDeliveryFee,
+  useSelectedDeliveryOption,
+  useSelectedDeliveryTime,
+  useTaxRate,
 } from "@/store/checkout";
 import CartItem from "./CartItem";
+import { useAddressStore } from "@/store/address";
 
 interface OrderSummaryProps {
   onPlaceOrder: () => void;
   isFormValid: boolean;
+  isLoading?: boolean;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
   onPlaceOrder,
   isFormValid,
+  isLoading = false,
 }) => {
   const { items: cartItems, totalPrice } = useCartStore();
-  const selectedAddressId = useSelectedAddressId();
-  const selectedContactId = useSelectedContactId();
+  const { selectedAddressId } = useAddressStore();
   const deliveryFee = useDeliveryFee();
+  const selectedDeliveryOption = useSelectedDeliveryOption();
+  const selectedDeliveryTime = useSelectedDeliveryTime();
+  const taxRate = useTaxRate();
+  const tax = totalPrice * taxRate;
+  const total = totalPrice + tax + deliveryFee;
 
-  const tax = totalPrice * 0.075; // 7.5% tax (adjust as needed)
-  const shipping = totalPrice > 100 ? 0 : 10; // Free shipping over $100
-  const total = totalPrice + tax + shipping;
+  const taxRatePercentage = (taxRate * 100).toFixed(1);
 
   return (
     <div className="lg:col-span-1">
@@ -41,6 +47,22 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             ))}
           </div>
 
+          {/* Selected Delivery Type */}
+          {selectedDeliveryOption && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm text-gray-600 mb-1">
+                Selected Delivery:
+              </div>
+              <div className="font-medium text-gray-900">
+                {selectedDeliveryOption.label}
+              </div>
+              <div className="text-sm text-gray-600">
+                {selectedDeliveryOption.description} •{" "}
+                {selectedDeliveryOption.time}
+              </div>
+            </div>
+          )}
+
           {/* Cost Breakdown */}
           <div className="border-t border-gray-200 pt-4 space-y-3">
             <div className="flex justify-between">
@@ -49,10 +71,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Delivery Fee</span>
-              <span className="font-medium">{formatNGN(deliveryFee)}</span>
+              <span className="font-medium text-secondary">
+                {formatNGN(deliveryFee)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tax</span>
+              <span className="text-gray-600">Tax ({taxRatePercentage}%)</span>
               <span className="font-medium">{formatNGN(tax)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
@@ -65,17 +89,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <Button
             onClick={onPlaceOrder}
             className="w-full bg-secondary hover:bg-secondary-100 py-3 text-lg font-medium"
-            disabled={!isFormValid || cartItems.length === 0}
+            disabled={!isFormValid || cartItems.length === 0 || isLoading}
           >
-            Place Order
+            {isLoading ? "Processing..." : "Place Order"}
           </Button>
 
           {/* Form Validation Status */}
           {!isFormValid && (
             <div className="text-sm text-red-600 space-y-1">
               {!selectedAddressId && <p>• Please select a delivery address</p>}
-              {!selectedContactId && <p>• Please select a contact number</p>}
-              <p>• Please complete payment information</p>
+              {!selectedDeliveryTime && <p>• Please select a delivery type</p>}
             </div>
           )}
         </CardContent>

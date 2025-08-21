@@ -11,6 +11,163 @@ type OrdersContext = {
 const ordersRouter = new Hono<OrdersContext>();
 const prisma = new PrismaClient();
 
+// Create a new order
+ordersRouter.post("/", requireAuth, async (c) => {
+  try {
+    const user = c.get("user");
+    const body = await c.req.json();
+
+    const {
+      items,
+      shippingAddressId,
+      billingAddressId,
+      deliveryTime,
+      shippingAmount = 0,
+      notes,
+      paymentMethod = "STRIPE",
+    } = body;
+
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return c.json({ error: "Order items are required" }, 400);
+    }
+
+    if (!shippingAddressId) {
+      return c.json({ error: "Shipping address is required" }, 400);
+    }
+
+    // Validate items structure
+    for (const item of items) {
+      if (!item.productId || !item.quantity || item.quantity <= 0) {
+        return c.json({ error: "Invalid item data" }, 400);
+      }
+    }
+
+    // Calculate total amount
+    const orderItems = await Promise.all(
+      items.map(async (item) => {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { price: true, name: true },
+        });
+
+        if (!product) {
+          throw new Error(`Product ${item.productId} not found`);
+        }
+
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: parseFloat(product.price.toString()),
+          name: product.name,
+        };
+      })
+    );
+
+    const subtotal = orderItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
+    const total = subtotal + shippingAmount;
+
+    // Create order with transaction
+    const order = await prisma.$transaction(async (tx) => {
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          userId: user.id,
+          status:
+            paymentMethod === "CASH_ON_DELIVERY" ? "CONFIRMED" : "PENDING",
+          subtotal,
+          shippingAmount,
+          total,
+          notes: notes || "Order placed from cart",
+          shippingAddressId,
+          billingAddressId: billingAddressId || shippingAddressId,
+          orderNumber: generateOrderNumber(),
+        },
+      });
+
+      // Create order items
+      const createdOrderItems = await Promise.all(
+        orderItems.map((item) =>
+          tx.orderItem.create({
+            data: {
+              orderId: newOrder.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              name: item.name,
+              unitPrice: item.price,
+              totalPrice: item.price * item.quantity,
+            },
+          })
+        )
+      );
+
+      // Create payment record for COD orders
+      let paymentRecord = null;
+      if (paymentMethod === "CASH_ON_DELIVERY") {
+        paymentRecord = await tx.payment.create({
+          data: {
+            orderId: newOrder.id,
+            amount: total,
+            currency: "NGN",
+            method: "CASH_ON_DELIVERY",
+            status: "PENDING", // Payment will be collected on delivery
+            gateway: "COD",
+            metadata: {
+              paymentType: "cash_on_delivery",
+              collectOnDelivery: true,
+            },
+          },
+        });
+      }
+
+      return {
+        ...newOrder,
+        orderItems: createdOrderItems,
+        payment: paymentRecord,
+      };
+    });
+
+    // Fetch the complete order with relationships
+    const completeOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  orderBy: { sortOrder: "asc" },
+                  take: 1,
+                },
+              },
+            },
+          },
+        },
+        shippingAddress: true,
+        billingAddress: true,
+      },
+    });
+
+    return c.json({ order: completeOrder }, 201);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    if (error instanceof Error) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// Helper function to generate order number
+function generateOrderNumber(): string {
+  const timestamp = Date.now().toString();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ORD-${timestamp}-${random}`;
+}
+
 // Get user's orders with pagination
 ordersRouter.get("/", requireAuth, async (c) => {
   try {

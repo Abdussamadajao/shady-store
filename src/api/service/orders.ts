@@ -2,7 +2,28 @@ import { axiosInstance } from "@/lib/axios";
 import type { Order } from "@/types";
 
 export const ordersApi = {
-  getOrders: async (page: number, limit: number, status?: string): Promise<{
+  createOrder: async (orderData: {
+    items: Array<{
+      productId: string;
+      quantity: number;
+      price: number;
+    }>;
+    shippingAddressId: string;
+    billingAddressId?: string;
+    deliveryTime?: string;
+    shippingAmount?: number;
+    notes?: string;
+    paymentMethod?: "STRIPE" | "CASH_ON_DELIVERY";
+  }): Promise<{ order: Order }> => {
+    const response = await axiosInstance.post("/orders", orderData);
+    return response.data;
+  },
+
+  getOrders: async (
+    page: number,
+    limit: number,
+    status?: string
+  ): Promise<{
     orders: Order[];
     pagination: {
       page: number;
@@ -17,7 +38,7 @@ export const ordersApi = {
     if (status && status !== "all") {
       params.append("status", status);
     }
-    
+
     const response = await axiosInstance.get(`/orders?${params.toString()}`);
     return response.data;
   },
@@ -41,7 +62,9 @@ export const ordersApi = {
     return response.data;
   },
 
-  getOrderTracking: async (orderId: string): Promise<{
+  getOrderTracking: async (
+    orderId: string
+  ): Promise<{
     orderId: string;
     orderNumber: string;
     status: string;
@@ -60,12 +83,21 @@ export const ordersApi = {
     return response.data;
   },
 
-  cancelOrder: async (orderId: string, reason?: string): Promise<{ message: string; order: Order }> => {
-    const response = await axiosInstance.post(`/orders/${orderId}/cancel`, { reason });
+  cancelOrder: async (
+    orderId: string,
+    reason?: string
+  ): Promise<{ message: string; order: Order }> => {
+    const response = await axiosInstance.post(`/orders/${orderId}/cancel`, {
+      reason,
+    });
     return response.data;
   },
 
-  requestRefund: async (orderId: string, reason: string, items?: any[]): Promise<{
+  requestRefund: async (
+    orderId: string,
+    reason: string,
+    items?: any[]
+  ): Promise<{
     message: string;
     order: Order;
     refundRequest: {
@@ -76,7 +108,10 @@ export const ordersApi = {
       status: string;
     };
   }> => {
-    const response = await axiosInstance.post(`/orders/${orderId}/refund`, { reason, items });
+    const response = await axiosInstance.post(`/orders/${orderId}/refund`, {
+      reason,
+      items,
+    });
     return response.data;
   },
 };

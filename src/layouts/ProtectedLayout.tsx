@@ -1,8 +1,10 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import Header from "../components/layout/Header";
+import { useCartQuery } from "@/api";
 
 const ProtectedLayout: React.FC = () => {
+  useCartQuery();
   return (
     <div className="min-h-screen bg-primary-DEFAULT">
       <Header />

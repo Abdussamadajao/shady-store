@@ -1,71 +1,125 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Check, X } from "lucide-react";
 import {
   useAddresses,
-  useSelectedAddressId,
-  useCheckoutStore,
-  type Address,
-} from "@/store/checkout";
+  useCreateAddress,
+  useUpdateAddress,
+  useDeleteAddress,
+} from "@/api/hooks";
+import type { Address } from "@/api/service/address";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import RHFTextField from "@/components/hook-form/rhf-textfield";
+import RHFSelect from "@/components/hook-form/rhf-select";
 
-const DeliveryAddress: React.FC = () => {
-  const addresses = useAddresses();
-  const selectedAddressId = useSelectedAddressId();
-  const { addAddress, deleteAddress, selectAddress } = useCheckoutStore();
+// Form validation schema
+const addressFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  address1: z.string().min(1, "Address is required"),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  postalCode: z.string().min(1, "Postal code is required"),
+  country: z.string().min(1, "Country is required"),
+  type: z.enum(["SHIPPING", "BILLING", "BOTH"]),
+});
 
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [addressForm, setAddressForm] = useState({
-    fullName: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-  });
+type AddressFormData = z.infer<typeof addressFormSchema>;
 
-  const handleAddAddress = () => {
-    if (
-      !addressForm.fullName ||
-      !addressForm.phone ||
-      !addressForm.address ||
-      !addressForm.city ||
-      !addressForm.state ||
-      !addressForm.zipCode
-    ) {
-      alert("Please fill in all address fields");
-      return;
-    }
+interface DeliveryAddressProps {
+  selectedAddressId: string | null;
+  onAddressSelect: (addressId: string) => void;
+}
 
-    addAddress(addressForm);
-    setAddressForm({
-      fullName: "",
+const DeliveryAddress: React.FC<DeliveryAddressProps> = ({
+  selectedAddressId,
+  onAddressSelect,
+}) => {
+  const { data: addressesData } = useAddresses();
+  const addresses = addressesData || [];
+  const createAddressMutation = useCreateAddress();
+  const updateAddressMutation = useUpdateAddress();
+  const deleteAddressMutation = useDeleteAddress();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+
+  const form = useForm<AddressFormData>({
+    resolver: zodResolver(addressFormSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
       phone: "",
-      address: "",
+      address1: "",
+      address2: "",
       city: "",
       state: "",
-      zipCode: "",
-    });
-    setShowAddressForm(false);
+      postalCode: "",
+      country: "Nigeria",
+      type: "SHIPPING",
+    },
+  });
+
+  const onSubmit = (data: AddressFormData) => {
+    if (editingAddress) {
+      updateAddressMutation.mutate(
+        { id: editingAddress.id, data },
+        {
+          onSuccess: () => {
+            setIsModalOpen(false);
+            setEditingAddress(null);
+            form.reset();
+          },
+        }
+      );
+    } else {
+      createAddressMutation.mutate(data, {
+        onSuccess: () => {
+          setIsModalOpen(false);
+          form.reset();
+        },
+      });
+    }
   };
 
   const handleEditAddress = (address: Address) => {
-    setAddressForm({
-      fullName: address.fullName,
+    setEditingAddress(address);
+    form.reset({
+      firstName: address.firstName,
+      lastName: address.lastName,
       phone: address.phone,
-      address: address.address,
+      address1: address.address1,
+      address2: address.address2 || "",
       city: address.city,
       state: address.state,
-      zipCode: address.zipCode,
+      postalCode: address.postalCode,
+      country: address.country,
+      type: address.type,
     });
-    setShowAddressForm(true);
+    setIsModalOpen(true);
+  };
+
+  const handleAddNewAddress = () => {
+    setEditingAddress(null);
+    form.reset();
+    setIsModalOpen(true);
   };
 
   const handleDeleteAddress = (id: string) => {
-    deleteAddress(id);
+    deleteAddressMutation.mutate(id);
   };
 
   return (
@@ -93,24 +147,29 @@ const DeliveryAddress: React.FC = () => {
                     ? "border-secondary bg-transparent"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
-                onClick={() => selectAddress(address.id)}
+                onClick={() => onAddressSelect(address.id)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-medium text-gray-800">
-                        {address.fullName}
+                        {address.firstName} {address.lastName}
                       </h4>
                       {address.isDefault && (
-                        <span className="px-2 py-1 bg-secondary-100 text-secondary text-xs rounded-full">
+                        <span className="px-2 py-1 bg-secondary-100 text-white text-xs rounded-full">
                           Default
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-600">{address.phone}</p>
-                    <p className="text-sm text-gray-600">{address.address}</p>
+                    <p className="text-sm text-gray-600">{address.address1}</p>
+                    {address.address2 && (
+                      <p className="text-sm text-gray-600">
+                        {address.address2}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
-                      {address.city}, {address.state} {address.zipCode}
+                      {address.city}, {address.state} {address.postalCode}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -120,6 +179,10 @@ const DeliveryAddress: React.FC = () => {
                         handleEditAddress(address);
                       }}
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      disabled={
+                        updateAddressMutation.isPending ||
+                        deleteAddressMutation.isPending
+                      }
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -129,6 +192,10 @@ const DeliveryAddress: React.FC = () => {
                         handleDeleteAddress(address.id);
                       }}
                       className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      disabled={
+                        updateAddressMutation.isPending ||
+                        deleteAddressMutation.isPending
+                      }
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -139,120 +206,130 @@ const DeliveryAddress: React.FC = () => {
           </div>
         )}
 
-        {showAddressForm ? (
-          <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={addressForm.fullName}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      fullName: e.target.value,
-                    })
-                  }
-                  placeholder="Enter full name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={addressForm.phone}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      phone: e.target.value,
-                    })
-                  }
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={addressForm.address}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      address: e.target.value,
-                    })
-                  }
-                  placeholder="Enter full address"
-                  rows={2}
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={addressForm.city}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      city: e.target.value,
-                    })
-                  }
-                  placeholder="Enter city"
-                />
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  value={addressForm.state}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      state: e.target.value,
-                    })
-                  }
-                  placeholder="Enter state"
-                />
-              </div>
-              <div>
-                <Label htmlFor="zipCode">ZIP Code</Label>
-                <Input
-                  id="zipCode"
-                  value={addressForm.zipCode}
-                  onChange={(e) =>
-                    setAddressForm({
-                      ...addressForm,
-                      zipCode: e.target.value,
-                    })
-                  }
-                  placeholder="Enter ZIP code"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                onClick={handleAddAddress}
-                className="bg-secondary hover:bg-secondary-100"
+        <Button
+          variant="outline"
+          className="text-secondary hover:text-white border-secondary hover:bg-secondary-100"
+          onClick={handleAddNewAddress}
+          disabled={
+            createAddressMutation.isPending ||
+            updateAddressMutation.isPending ||
+            deleteAddressMutation.isPending
+          }
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Address
+        </Button>
+
+        {/* Address Form Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingAddress ? "Edit Address" : "Add New Address"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
               >
-                Save Address
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddressForm(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            className="text-secondary border-secondary hover:bg-secondary-100"
-            onClick={() => setShowAddressForm(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Address
-          </Button>
-        )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <RHFTextField
+                    name="firstName"
+                    label="First Name"
+                    inputProps={{ placeholder: "Enter first name" }}
+                  />
+                  <RHFTextField
+                    name="lastName"
+                    label="Last Name"
+                    inputProps={{ placeholder: "Enter last name" }}
+                  />
+                  <RHFTextField
+                    name="phone"
+                    label="Phone Number"
+                    inputProps={{ placeholder: "Enter phone number" }}
+                  />
+                  <RHFTextField
+                    name="country"
+                    label="Country"
+                    inputProps={{ placeholder: "Enter country" }}
+                  />
+                  <RHFSelect
+                    name="type"
+                    label="Address Type"
+                    placeholder="Select address type"
+                    options={[
+                      { label: "Shipping Address", value: "SHIPPING" },
+                      { label: "Billing Address", value: "BILLING" },
+                      { label: "Both", value: "BOTH" },
+                    ]}
+                  />
+                  <div className="md:col-span-2">
+                    <RHFTextField
+                      name="address1"
+                      label="Address Line 1"
+                      inputProps={{ placeholder: "Enter street address" }}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RHFTextField
+                      name="address2"
+                      label="Address Line 2 (Optional)"
+                      inputProps={{
+                        placeholder: "Apartment, suite, etc. (optional)",
+                      }}
+                    />
+                  </div>
+                  <RHFTextField
+                    name="city"
+                    label="City"
+                    inputProps={{ placeholder: "Enter city" }}
+                  />
+                  <RHFTextField
+                    name="state"
+                    label="State"
+                    inputProps={{ placeholder: "Enter state" }}
+                  />
+                  <RHFTextField
+                    name="postalCode"
+                    label="Postal Code"
+                    inputProps={{ placeholder: "Enter postal code" }}
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                    disabled={
+                      createAddressMutation.isPending ||
+                      updateAddressMutation.isPending
+                    }
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-secondary hover:bg-secondary-100"
+                    disabled={
+                      createAddressMutation.isPending ||
+                      updateAddressMutation.isPending
+                    }
+                  >
+                    {createAddressMutation.isPending ||
+                    updateAddressMutation.isPending
+                      ? "Saving..."
+                      : editingAddress
+                      ? "Update Address"
+                      : "Save Address"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

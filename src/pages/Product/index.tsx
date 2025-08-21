@@ -13,6 +13,8 @@ import { formatNGN } from "@/utils/currency";
 import useCartStore from "@/store/cart";
 import { useCartMutations } from "@/api";
 import { useAuthStore } from "@/store/auth";
+import { useWishlistStatus, useWishlistMutations } from "@/api";
+import { toast } from "sonner";
 
 const ProductPage: React.FC = () => {
   const { id } = useParams();
@@ -27,6 +29,15 @@ const ProductPage: React.FC = () => {
   const cartItem = cartItems.find((item) => item.productId === id);
   const cartQuantity = cartItem?.quantity || 0;
   const { user } = useAuthStore();
+
+  // Wishlist functionality
+  const { data: wishlistStatus } = useWishlistStatus(id || "");
+  const {
+    addToWishlist,
+    removeFromWishlist,
+    isLoading: wishlistLoading,
+  } = useWishlistMutations();
+  const isInWishlist = wishlistStatus?.inWishlist || false;
 
   const productImages = product?.images?.map((img) => img.url) || [
     "https://via.placeholder.com/400x400?text=Product+Image",
@@ -76,6 +87,39 @@ const ProductPage: React.FC = () => {
       updateQuantity(cartItem?.id || "", cartQuantity - 1);
     } else {
       removeFromCart(cartItem?.id || "");
+    }
+  };
+
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      // Handle case when user is not logged in
+      toast.error("Please log in to manage your wishlist", {
+        description: "Sign in to save products you love for later",
+        action: {
+          label: "Sign In",
+          onClick: () => {
+            // You can redirect to login page here
+            // navigate('/login');
+          },
+        },
+      });
+      return;
+    }
+
+    try {
+      if (isInWishlist) {
+        await removeFromWishlist(id || "");
+        toast.success("Product removed from wishlist");
+      } else {
+        await addToWishlist(id || "");
+        toast.success("Product added to wishlist");
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      toast.error("Failed to update wishlist");
     }
   };
 
@@ -144,6 +188,9 @@ const ProductPage: React.FC = () => {
                     onAddToCart={handleAddItem}
                     onIncrement={handleIncrement}
                     onDecrement={handleDecrement}
+                    onToggleWishlist={handleToggleWishlist}
+                    isInWishlist={isInWishlist}
+                    isWishlistLoading={wishlistLoading}
                   />
                 </div>
               </div>

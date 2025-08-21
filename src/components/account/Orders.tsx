@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Package,
   Truck,
@@ -13,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatNGN } from "@/utils/currency";
 import type { Order } from "@/types";
+import { useDeliveryFee } from "@/store/checkout";
+import CancelOrderModal from "./CancelOrderModal";
 
 interface OrdersProps {
   orders: Order[];
@@ -20,6 +23,7 @@ interface OrdersProps {
   onRequestRefund?: (orderId: string, reason: string, items?: any[]) => void;
   onViewOrder?: (orderId: string) => void;
   onTrackOrder?: (orderId: string) => void;
+  isLoading?: boolean;
 }
 
 const Orders: React.FC<OrdersProps> = ({
@@ -28,7 +32,29 @@ const Orders: React.FC<OrdersProps> = ({
   onRequestRefund,
   onViewOrder,
   onTrackOrder,
+  isLoading = false,
 }) => {
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [selectedOrderForCancel, setSelectedOrderForCancel] =
+    useState<Order | null>(null);
+
+  const handleCancelClick = (order: Order) => {
+    setSelectedOrderForCancel(order);
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelConfirm = (reason: string) => {
+    if (selectedOrderForCancel && onCancelOrder) {
+      onCancelOrder(selectedOrderForCancel.id, reason);
+      setCancelModalOpen(false);
+      setSelectedOrderForCancel(null);
+    }
+  };
+
+  const handleCancelClose = () => {
+    setCancelModalOpen(false);
+    setSelectedOrderForCancel(null);
+  };
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered":
@@ -264,7 +290,7 @@ const Orders: React.FC<OrdersProps> = ({
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => onCancelOrder?.(order.id)}
+                    onClick={() => handleCancelClick(order)}
                   >
                     <XCircle className="h-4 w-4 mr-2" />
                     Cancel Order
@@ -284,6 +310,17 @@ const Orders: React.FC<OrdersProps> = ({
           </Card>
         ))}
       </div>
+
+      {/* Cancel Order Modal */}
+      {selectedOrderForCancel && (
+        <CancelOrderModal
+          isOpen={cancelModalOpen}
+          onClose={handleCancelClose}
+          onConfirm={handleCancelConfirm}
+          orderNumber={selectedOrderForCancel.orderNumber}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 };

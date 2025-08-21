@@ -20,10 +20,8 @@ const OrdersPage = () => {
   const handleCancelOrder = async (orderId: string, reason?: string) => {
     try {
       await cancelOrder({ orderId, reason });
-      toast.success("Order cancelled successfully!");
     } catch (error) {
       toast.error("Failed to cancel order");
-      console.error("Error cancelling order:", error);
     }
   };
 
@@ -42,11 +40,13 @@ const OrdersPage = () => {
   };
 
   const handleViewOrder = (orderId: string) => {
-    navigate(`/account/orders/${orderId}`);
+    // TODO: Implement order detail view
+    toast.info("Order detail view coming soon!");
   };
 
   const handleTrackOrder = (orderId: string) => {
-    navigate(`/account/orders/${orderId}/tracking`);
+    // TODO: Implement order tracking view
+    toast.info("Order tracking coming soon!");
   };
 
   // Show loading state
@@ -105,6 +105,7 @@ const OrdersPage = () => {
           onRequestRefund={handleRequestRefund}
           onViewOrder={handleViewOrder}
           onTrackOrder={handleTrackOrder}
+          isLoading={mutationsLoading}
         />
       </div>
     </div>

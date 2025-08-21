@@ -44,16 +44,14 @@ export default function RHFSelect({
                     <div className='flex items-center gap-1'>
                         <FormLabel>{label}</FormLabel>
                         {infoIcon && infoText && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Info className='h-4 w-4 text-muted-foreground cursor-help' />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{infoText}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{infoText}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                     </div>
                     <Popover open={open} onOpenChange={setOpen}>

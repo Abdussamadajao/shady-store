@@ -4,6 +4,7 @@ import { useCartMutations } from "@/api";
 import { useWishlist, useRemoveWishlistItem } from "@/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { PATH } from "@/routes/paths";
 
 const WishlistPage = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const WishlistPage = () => {
   };
 
   const handleViewProduct = (productId: string) => {
-    navigate(`/product/${productId}`);
+    navigate(PATH.products.single(productId));
   };
 
   // Show loading state
@@ -113,7 +114,6 @@ const WishlistPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Wishlist
           items={wishlistItems}
-          onAddToCart={handleAddToCart}
           onRemoveFromWishlist={handleRemoveFromWishlist}
           onViewProduct={handleViewProduct}
         />

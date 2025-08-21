@@ -17,10 +17,24 @@ const fetchCategories = async (): Promise<Category[]> => {
   return response.data;
 };
 
+const fetchCategory = async (id: string): Promise<Category> => {
+  const response = await axiosInstance.get(`/categories/${id}`);
+  return response.data;
+};
+
 export const useCategories = () => {
   return useQuery({
     queryKey: ["categories"],
     queryFn: fetchCategories,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useCategory = (id: string) => {
+  return useQuery({
+    queryKey: ["category", id],
+    queryFn: () => fetchCategory(id),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });

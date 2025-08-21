@@ -15,6 +15,8 @@ import Home from "../pages/Home";
 import ProductPage from "../pages/Product";
 import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
+import Payment from "../pages/Payment";
+import PaymentSuccess from "../pages/Payment/PaymentSuccess";
 import Offers from "../pages/Offers";
 import Help from "../pages/Help";
 
@@ -107,6 +109,14 @@ export const routes: RouteObject[] = [
           {
             path: "/checkout",
             element: <Checkout />,
+          },
+          {
+            path: "/payment/:orderId",
+            element: <Payment />,
+          },
+          {
+            path: "/payment-success",
+            element: <PaymentSuccess />,
           },
           {
             path: PATH.account.root,

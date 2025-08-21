@@ -6,10 +6,16 @@ import heroTwo from "@/assets/images/hero-2.jpg";
 import React, { useState } from "react";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { Button } from "@/components/ui/button";
-import { Filter as FilterIcon, Grid, List } from "lucide-react";
+import { Filter as FilterIcon, Grid, List, Loader2 } from "lucide-react";
+import { useSelectedCategory } from "@/store/products";
+import { useCategory } from "@/hooks/useCategories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Home: React.FC = () => {
-  // Auto-scroll to top when navigating to home
+  const selectedCategory = useSelectedCategory();
+  const { data: category, isLoading } = useCategory(
+    selectedCategory === "All" ? "" : selectedCategory
+  );
   useScrollToTop();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -69,7 +75,11 @@ const Home: React.FC = () => {
                     </h1>
                     <span className="text-sm text-gray-500">•</span>
                     <span className="text-sm text-gray-500">
-                      All Categories
+                      {isLoading ? (
+                        <Skeleton className="w-20 h-4" />
+                      ) : (
+                        category?.name || "All Categories"
+                      )}
                     </span>
                   </div>
 

@@ -11,6 +11,9 @@ interface ProductDetailsProps {
   onAddToCart: (e: React.MouseEvent) => void;
   onIncrement: (e: React.MouseEvent) => void;
   onDecrement: (e: React.MouseEvent) => void;
+  onToggleWishlist: (e: React.MouseEvent) => void;
+  isInWishlist: boolean;
+  isWishlistLoading?: boolean;
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({
@@ -19,6 +22,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   onAddToCart,
   onIncrement,
   onDecrement,
+  onToggleWishlist,
+  isInWishlist,
+  isWishlistLoading = false,
 }) => {
   return (
     <div className="h-full flex flex-col space-y-6 lg:space-y-8">
@@ -71,6 +77,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
           onAddToCart={onAddToCart}
           onIncrement={onIncrement}
           onDecrement={onDecrement}
+          onToggleWishlist={onToggleWishlist}
+          isInWishlist={isInWishlist}
+          isWishlistLoading={isWishlistLoading}
         />
       </div>
 
